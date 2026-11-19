@@ -89,8 +89,8 @@ progress{width:100%;height:14px;margin-top:10px}
    <label>Netto incassato</label><select id="m_n"></select><label>Stato (esclude le annullate)</label><select id="m_s"></select>
    <div class="scroll" style="max-height:340px;overflow:auto;margin-top:12px"><table id="ipv"></table></div>
    <progress id="ipg" class="hide" value="0" max="1"></progress>
-   <button class="btn" id="i_go">Importa le righe selezionate</button>
-  </div><p class="note" id="i_m"></p></div>
+   <button class="btn" id="i_go">Importa le righe selezionate</button><button class="btn dng hide" id="i_stop">Interrompi importazione</button><button class="btn sec" id="i_cn">Annulla e scarta il file</button>
+  </div><p class="note" id="i_m"></p><div id="i_undo" class="hide"><button class="btn sec" id="i_un"></button><p class="note">Rimuove solo le prenotazioni aggiunte con l’ultima importazione.</p></div></div>
  <div class="card"><h2>Esporta per Excel</h2><button class="btn sec" id="xb">Prenotazioni (CSV)</button><button class="btn sec" id="xe">Spese (CSV)</button><p class="note">Esporta le voci della struttura e di tutti gli anni.</p></div>
 </section>
 </main>
@@ -176,7 +176,7 @@ function R(){
  $("bl").innerHTML=bs.length?bs.map(function(b){return"<div class='item' data-b='"+esc(b.id)+"'><div><b>"+esc(b.g||"Ospite n.d.")+"</b><small>"+esc(stx(b.s).n)+" · "+esc(b.p)+"</small><small>"+fd(b.i)+" → "+fd(b.o)+" · "+nights(b)+" notti"+(b.u?" · "+b.u+" osp.":"")+"</small></div><div class='amt'>"+eur(b.n)+"<small>"+(b.l!=null?"lordo "+eur(b.l):"netto")+"</small></div></div>"}).join(""):"<p class='note'>Nessuna prenotazione nel "+y+". Tocca + per aggiungerne una.</p>";
  var es=fe.filter(function(x){return x.d.slice(0,4)==y}).sort(function(a,b){return b.d<a.d?-1:1});
  $("el").innerHTML=es.length?es.map(function(x){return"<div class='item' data-e='"+esc(x.id)+"'><div><b>"+esc(x.c)+"</b><small>"+esc(stx(x.s).n)+" · "+fd(x.d)+"</small>"+(x.t?"<small>"+esc(x.t)+"</small>":"")+"</div><div class='amt neg'>"+eur(x.a)+"</div></div>"}).join(""):"<p class='note'>Nessuna spesa nel "+y+". Tocca + per aggiungerne una.</p>";
- $("lbk").textContent=LB?"Ultimo backup: "+new Date(LB).toLocaleDateString("it-IT")+".":"Nessun backup ancora fatto.";
+ undoUI();$("lbk").textContent=LB?"Ultimo backup: "+new Date(LB).toLocaleDateString("it-IT")+".":"Nessun backup ancora fatto.";
 }
 
 /* prenotazione */
@@ -289,27 +289,43 @@ $("i_f").onchange=function(){
  };
  fr.readAsText(f);
 };
+var abortImp=false;
+function resetImp(){CSV=null;IR=[];$("i_map").classList.add("hide");$("i_f").value="";$("ipg").classList.add("hide");$("i_stop").classList.add("hide");$("i_go").disabled=false;$("i_cn").disabled=false}
+$("i_cn").onclick=function(){resetImp();$("i_m").textContent="Importazione annullata: nessun dato aggiunto.";say("Importazione annullata.")};
+$("i_stop").onclick=function(){abortImp=true;this.disabled=true};
+function lastImp(){try{return JSON.parse(localStorage.getItem("lastimp")||"null")}catch(e){return null}}
+function undoUI(){var u=lastImp(),n=u?S.b.filter(function(b){return u.ids.indexOf(b.id)>-1}).length:0;
+ $("i_undo").classList.toggle("hide",!n);$("i_un").textContent="Annulla ultima importazione ("+n+" prenotazioni)";$("i_un").dataset.n=n}
+$("i_un").onclick=function(){
+ var u=lastImp();if(!u)return;
+ if(pend!="U"){pend="U";this.textContent="Tocca ancora per rimuovere "+this.dataset.n+" prenotazioni";clearTimeout(pt);pt=setTimeout(function(){pend=null;undoUI()},5000);return}
+ pend=null;S.b=S.b.filter(function(b){return u.ids.indexOf(b.id)<0});try{localStorage.removeItem("lastimp")}catch(e){}
+ save();render();say("Ultima importazione annullata.");
+};
 $("i_go").onclick=async function(){
  if(!CSV)return;
- var s=$("i_s").value,p=$("i_p").value,r=stx(s).r,n=0,dup=0,bad=0,sel=IR.filter(function(x){return x.x}),pg=$("ipg"),btn=$("i_go");
+ var s=$("i_s").value,p=$("i_p").value,r=stx(s).r,added=[],dup=0,bad=0,sel=IR.filter(function(x){return x.x}),pg=$("ipg"),btn=$("i_go");
  if(!sel.length){say("Nessuna riga selezionata.",1);return}
- btn.disabled=true;pg.classList.remove("hide");pg.max=sel.length;pg.value=0;
- for(var k=0;k<sel.length;k++){
+ abortImp=false;btn.disabled=true;$("i_cn").disabled=true;$("i_stop").disabled=false;$("i_stop").classList.remove("hide");pg.classList.remove("hide");pg.max=sel.length;pg.value=0;
+ for(var k=0;k<sel.length&&!abortImp;k++){
   var x=sel[k],i=pd(x.i),o=pd(x.o),L=num(x.l),N=num(x.n),f=Math.abs(num(x.f)||0),u=parseInt(x.u,10);
   if(!i||!o||o<i||(L==null&&N==null))bad++;
   else{
    if(L==null&&N!=null)L=r2((N+f)/(1-r));
    var c=r2(L*r);if(N==null)N=r2(L-c-f);
-   if(S.b.some(function(b){return b.s==s&&b.p==p&&b.i==i&&b.o==o&&b.g==x.g&&b.l==L}))dup++;
-   else{var rec={id:rid(),s:s,p:p,g:x.g,i:i,o:o,l:L,f:f,c:c,n:N};if(!isNaN(u))rec.u=u;S.b.push(rec);n++}
+   if(S.b.concat(added).some(function(b){return b.s==s&&b.p==p&&b.i==i&&b.o==o&&b.g==x.g&&b.l==L}))dup++;
+   else{var rec={id:rid(),s:s,p:p,g:x.g,i:i,o:o,l:L,f:f,c:c,n:N};if(!isNaN(u))rec.u=u;added.push(rec)}
   }
   pg.value=k+1;$("i_m").textContent="Importazione "+(k+1)+" di "+sel.length+"…";
-  if(k%20==0)await new Promise(function(z){setTimeout(z,0)});
+  if(k%5==0)await new Promise(function(z){setTimeout(z,0)});
  }
- save();var msg="Importate "+n+" prenotazioni. Già presenti: "+dup+". Non valide: "+bad+".";
- $("i_m").textContent=msg;say(msg,bad&&!n);btn.disabled=false;pg.classList.add("hide");
- if(!bad){CSV=null;IR=[];$("i_map").classList.add("hide");$("i_f").value=""}
- render();
+ $("i_stop").classList.add("hide");pg.classList.add("hide");btn.disabled=false;$("i_cn").disabled=false;
+ if(abortImp){abortImp=false;$("i_m").textContent="Importazione interrotta: nessuna riga è stata aggiunta.";say("Importazione interrotta. Nessuna riga aggiunta.");return}
+ S.b=S.b.concat(added);
+ if(added.length){try{localStorage.setItem("lastimp",JSON.stringify({ids:added.map(function(b){return b.id}),t:Date.now()}))}catch(e){}}
+ save();var msg="Importate "+added.length+" prenotazioni. Già presenti: "+dup+". Non valide: "+bad+".";
+ if(!bad)resetImp();
+ $("i_m").textContent=msg;say(msg,bad&&!added.length);render();
 };
 
 /* backup ed esportazione (menu Condividi di iPhone) */
