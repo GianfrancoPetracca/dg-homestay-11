@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Affitti</title>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Affitti"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1f6f5c"><meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="icon.png"><link rel="icon" href="icon.png">
+<style>
+:root{--bg:#f2f1ec;--card:#fff;--tx:#1c1c1a;--mut:#6f6e68;--bd:#e3e1d9;--ac:#1f6f5c;--out:#c2543a;--tab:58px;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#222220;--tx:#efeee9;--mut:#a09f98;--bd:#38372f;--ac:#4cb89d;--out:#e58a70;color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,system-ui,"Segoe UI",sans-serif;padding-bottom:calc(var(--tab) + env(safe-area-inset-bottom,0px) + 90px);overscroll-behavior-y:none}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 8px;border-bottom:1px solid var(--bd)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+h1{font-size:22px;margin:0}h2{font-size:15px;margin:0 0 8px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+main{padding:12px 14px;max-width:700px;margin:0 auto}
+.seg{display:flex;gap:6px;overflow-x:auto}
+.seg button{flex:1;white-space:nowrap;min-height:40px;padding:0 12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:20px;font:inherit;font-size:14px}
+.seg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+.k2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.k2 .card{margin:0}
+.kpi{font-size:20px;font-weight:700}.kpi small,.item small,.amt small{display:block;font-size:12px;font-weight:400;color:var(--mut)}
+.pos{color:var(--ac)}.neg{color:var(--out)}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+input,select{width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;font-size:16px}
+input[type=checkbox]{width:22px;min-height:22px;vertical-align:middle;margin-right:8px}
+.btn{width:100%;min-height:48px;margin-top:12px;border:0;border-radius:12px;background:var(--ac);color:#fff;font:inherit;font-weight:600}
+.btn.sec{background:var(--card);color:var(--tx);border:1px solid var(--bd)}.btn.dng{background:var(--out)}
+.btn:disabled{opacity:.5}
+.item{display:flex;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.item b{display:block}.amt{text-align:right;font-weight:700;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 4px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
+th{font-size:12px;color:var(--mut);font-weight:500}tfoot td{font-weight:700}
+.scroll{overflow-x:auto}
+.bars{display:flex;align-items:flex-end;gap:4px;height:110px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:9px;color:var(--mut)}
+.bars span{display:flex;align-items:flex-end;gap:1px;height:100%;width:100%;justify-content:center}
+.bars i{display:block;width:42%;min-height:1px;border-radius:3px 3px 0 0}
+.note{font-size:13px;color:var(--mut);margin:8px 0 0}.hide{display:none!important}
+.warn{background:#fff3df;border-color:#f0d49b;color:#5a4410}@media (prefers-color-scheme:dark){.warn{background:#3a2f14;border-color:#6b5420;color:#f1dba8}}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{flex:1;min-height:var(--tab);border:0;background:none;color:var(--mut);font:inherit;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.tabs button span{font-size:22px;line-height:1}.tabs button.on{color:var(--ac);font-weight:600}
+.fab{position:fixed;right:16px;bottom:calc(var(--tab) + env(safe-area-inset-bottom,0px) + 16px);width:58px;height:58px;border-radius:50%;border:0;background:var(--ac);color:#fff;font-size:32px;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.28);z-index:6}
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 30px)}
+.sheet h1{margin-bottom:4px}.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.g2>div{min-width:0}input[type=date]{min-width:0;-webkit-appearance:none;appearance:none;text-align:left}
+#tt{position:fixed;left:14px;right:14px;bottom:calc(var(--tab) + env(safe-area-inset-bottom,0px) + 84px);padding:12px;border-radius:12px;z-index:30;text-align:center;font-size:15px}
+progress{width:100%;height:14px;margin-top:10px}
+</style>
+</head>
+<body>
+<header>
+ <div class="top"><h1>Affitti</h1><select id="yr" style="width:auto;min-width:96px"></select></div>
+ <div class="seg" id="fs"></div>
+</header>
+<main>
+<section id="sum">
+ <div class="card warn hide" id="bkb"></div>
+ <div class="k2" id="kpi"></div>
+ <div class="card"><h2>Andamento mensile</h2><div class="bars" id="bars"></div><p class="note"><span class="pos">■</span> netto &nbsp;<span class="neg">■</span> spese</p></div>
+ <div class="card"><h2>Per mese</h2><table id="mt"></table><button class="btn sec" id="tgl">Mostra dettaglio completo</button><div class="scroll hide" id="mdw" style="margin-top:10px"><table id="md"></table></div>
+  <p class="note">Le prenotazioni contano nel mese del check-in. Netto = lordo − commissione − cedolare.</p></div>
+ <div class="card"><h2>Storico per anno</h2><table id="yt"></table></div>
+ <div class="card"><h2>Per struttura</h2><table id="gt"></table></div>
+ <div class="card"><h2>Per portale</h2><table id="pt"></table></div>
+</section>
+<section id="bk" class="hide"><div id="bl"></div></section>
+<section id="ex" class="hide"><div id="el"></div></section>
+<section id="more" class="hide">
+ <div class="card warn hide" id="inst"><b>Importante su iPhone</b><p class="note" style="color:inherit">Tocca Condividi → “Aggiungi alla schermata Home” e usa solo quell’icona. I dati dell’icona e quelli di Safari sono separati: se inserisci in uno non li trovi nell’altro.</p></div>
+ <div class="card"><h2>Backup</h2><p class="note" style="margin:0 0 4px" id="lbk"></p>
+  <button class="btn" id="bkp">Salva backup (File, AirDrop…)</button>
+  <label>Ripristino</label><select id="r_mode"><option value="mrg">Unisci ai dati presenti</option><option value="rep">Sostituisci tutto</option></select>
+  <label>File di backup</label><input id="rst" type="file" accept=".json,application/json">
+  <p class="note">Il backup è l’unico modo per spostare i dati tra iPhone e Mac. Fallo spesso.</p></div>
+ <div class="card"><h2>Importa da CSV</h2>
+  <label>Struttura</label><select id="i_s"></select>
+  <label>Portale</label><select id="i_p"><option>Airbnb</option><option>Booking.com</option></select>
+  <label>File CSV (mensile o annuale, anche passato)</label><input id="i_f" type="file" accept=".csv,.txt">
+  <div id="i_map" class="hide">
+   <p class="note">1) Controlla le colonne. 2) Correggi le righe e togli la spunta a quelle da escludere. 3) Importa.</p>
+   <label>Ospite</label><select id="m_g"></select><label>Check-in</label><select id="m_i"></select><label>Check-out</label><select id="m_o"></select>
+   <label>N. ospiti</label><select id="m_u"></select><label>Importo lordo</label><select id="m_l"></select><label>Commissione (€)</label><select id="m_f"></select>
+   <label>Netto incassato</label><select id="m_n"></select><label>Stato (esclude le annullate)</label><select id="m_s"></select>
+   <div class="scroll" style="max-height:340px;overflow:auto;margin-top:12px"><table id="ipv"></table></div>
+   <progress id="ipg" class="hide" value="0" max="1"></progress>
+   <button class="btn" id="i_go">Importa le righe selezionate</button>
+  </div><p class="note" id="i_m"></p></div>
+ <div class="card"><h2>Esporta per Excel</h2><button class="btn sec" id="xb">Prenotazioni (CSV)</button><button class="btn sec" id="xe">Spese (CSV)</button><p class="note">Esporta le voci della struttura e di tutti gli anni.</p></div>
+</section>
+</main>
+<button class="fab hide" id="fab" aria-label="Aggiungi">+</button>
+<nav class="tabs">
+ <button data-t="sum" class="on"><span>📊</span>Riepilogo</button><button data-t="bk"><span>🛏️</span>Prenotazioni</button>
+ <button data-t="ex"><span>💶</span>Spese</button><button data-t="more"><span>⚙️</span>Altro</button>
+</nav>
+
+<div id="shB" class="sheet hide">
+ <h1 id="bt">Nuova prenotazione</h1>
+ <label>Struttura</label><select id="b_s"></select>
+ <label>Portale</label><select id="b_p"></select>
+ <label>Ospite (principale)</label><input id="b_g" autocomplete="off">
+ <label>Numero ospiti</label><select id="b_u"></select>
+ <div class="g2"><div><label>Check-in</label><input id="b_i" type="date"></div><div><label>Check-out</label><input id="b_o" type="date"></div></div>
+ <label>Importo lordo (€) — facoltativo</label><input id="b_l" inputmode="decimal">
+ <div id="b_fw"><label>Commissione portale (€) — facoltativa</label><input id="b_f" inputmode="decimal"></div>
+ <label id="b_nl">Netto (€)</label><input id="b_n" inputmode="decimal">
+ <label><input type="checkbox" id="b_man">Importi liberi (nessun calcolo automatico)</label>
+ <p class="note" id="b_h"></p>
+ <button class="btn" id="addB">Salva</button><button class="btn sec" id="cancB">Annulla</button><button class="btn dng hide" id="delB">Elimina prenotazione</button>
+</div>
+<div id="shE" class="sheet hide">
+ <h1 id="et">Nuova spesa</h1>
+ <label>Struttura</label><select id="e_s"></select>
+ <label>Data</label><input id="e_d" type="date">
+ <label>Categoria</label><select id="e_c"></select>
+ <label>Descrizione</label><input id="e_t" autocomplete="off">
+ <label>Importo (€)</label><input id="e_a" inputmode="decimal">
+ <button class="btn" id="addE">Salva</button><button class="btn sec" id="cancE">Annulla</button><button class="btn dng hide" id="delE">Elimina spesa</button>
+</div>
+<div id="tt" class="hide"></div>
+<script>
+var ST=[{id:"m",n:"MenoUno House",r:.21,m:4},{id:"d",n:"Dimora Irene",r:.26,m:6}];
+var CATS=["Pulizie","Utenze","Manutenzione","Biancheria e forniture","Canone speciale","Spese estintori","Tasse e imposte","Software","Altro"];
+var PORT=["Airbnb","Booking.com","Diretta"];
+var M=["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
+var S={b:[],e:[]},F="all",last="l",EID=null,EEID=null,CSV=null,IR=[],tm=null,pend=null,pt=null,TAB="sum",LB=0,Y=new Date().getFullYear();
+var $=function(i){return document.getElementById(i)};
+var eur=function(n){return new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(n||0)};
+var cls=function(n){return n<0?"neg":"pos"};
+var r2=function(n){return Math.round(n*100)/100};
+var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+var stx=function(id){return ST.filter(function(s){return s.id==id})[0]||ST[0]};
+var nights=function(b){return Math.max(0,Math.round((new Date(b.o)-new Date(b.i))/864e5))};
+var gr=function(b){return b.l!=null?b.l:b.n};
+var flt=function(x){return F=="all"||x.s==F};
+var rid=function(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)};
+var fd=function(d){return(+d.slice(8,10))+" "+M[+d.slice(5,7)-1]+" "+d.slice(2,4)};
+function say(m,bad){var t=$("tt");t.textContent=m;t.style.background=bad?"var(--out)":"var(--tx)";t.style.color=bad?"#fff":"var(--bg)";t.classList.remove("hide");clearTimeout(tm);tm=setTimeout(function(){t.classList.add("hide")},4500)}
+function num(v){if(v==null)return null;var s=String(v).replace(/[^\d,.\-]/g,"");if(!/\d/.test(s))return null;var c=s.lastIndexOf(","),d=s.lastIndexOf(".");
+ if(c>-1&&d>-1)s=c>d?s.replace(/\./g,"").replace(",","."):s.replace(/,/g,"");else if(c>-1)s=s.replace(",",".");var n=parseFloat(s);return isNaN(n)?null:n}
+function pd(s){s=String(s||"").trim();var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[1]+"-"+m[2]+"-"+m[3];
+ m=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})/);if(m)return m[3]+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[1]).slice(-2);return null}
+function opts(el,arr){$(el).innerHTML=arr.map(function(a){return"<option value='"+esc(a[0])+"'>"+esc(a[1])+"</option>"}).join("")}
+function norm(d){return{b:Array.isArray(d&&d.b)?d.b:[],e:Array.isArray(d&&d.e)?d.e:[]}}
+function ensureIds(){var ch=false;S.b.concat(S.e).forEach(function(x){if(!x.id){x.id=rid();ch=true}});return ch}
+function save(){try{localStorage.setItem("ledger2",JSON.stringify(S))}catch(e){say("Impossibile salvare su questo dispositivo.",1)}}
+function years(){var s={};for(var a=2020;a<=Y+1;a++)s[a]=1;S.b.forEach(function(b){s[b.i.slice(0,4)]=1});S.e.forEach(function(x){s[x.d.slice(0,4)]=1});return Object.keys(s).sort()}
+function tbl(h,rows,foot){return"<thead><tr>"+h.map(function(x){return"<th>"+x+"</th>"}).join("")+"</tr></thead><tbody>"+rows.map(function(r){return"<tr>"+r.map(function(c){return"<td>"+c+"</td>"}).join("")+"</tr>"}).join("")+"</tbody>"+(foot?"<tfoot><tr>"+foot.map(function(c){return"<td>"+c+"</td>"}).join("")+"</tr></tfoot>":"")}
+function render(){try{R()}catch(e){say("Errore di visualizzazione: "+e.message,1)}}
+function R(){
+ var ys=years(),sel=$("yr"),cur=sel.value||String(Y);
+ sel.innerHTML=ys.map(function(y){return"<option"+(y==cur?" selected":"")+">"+y+"</option>"}).join("");
+ var y=sel.value,fb=S.b.filter(flt),fe=S.e.filter(flt),mm=[],T={n:0,k:0,g:0,f:0,c:0,t:0,e:0};
+ for(var m=0;m<12;m++)mm.push({n:0,k:0,g:0,f:0,c:0,t:0,e:0});
+ fb.forEach(function(x){if(x.i.slice(0,4)==y){var r=mm[+x.i.slice(5,7)-1];r.n+=nights(x);r.k++;r.g+=gr(x);r.f+=x.f||0;r.c+=x.c||0;r.t+=x.n}});
+ fe.forEach(function(x){if(x.d.slice(0,4)==y)mm[+x.d.slice(5,7)-1].e+=x.a});
+ mm.forEach(function(r){for(var k in T)T[k]+=r[k]});var pr=T.t-T.e;
+ var nb=S.b.length+S.e.length,days=LB?Math.floor((Date.now()-LB)/864e5):null,bb=$("bkb");
+ bb.classList.toggle("hide",!(nb&&(!LB||days>=14)));bb.innerHTML=!LB?"<b>Nessun backup fatto.</b><br>Vai su Altro e salva un backup: se perdi i dati dal telefono non si recuperano.":"<b>Ultimo backup "+days+" giorni fa.</b><br>Vai su Altro e salvane uno nuovo.";
+ $("kpi").innerHTML=[["Entrate nette",T.t,"pos"],["Spese",T.e,"neg"],["Utile",pr,cls(pr)],["Cedolare",T.c,""]].map(function(k){return'<div class="card"><div class="kpi '+k[2]+'">'+eur(k[1])+"<small>"+k[0]+" "+y+"</small></div></div>"}).join("")+'<div class="card" style="grid-column:1/3"><div class="kpi">'+T.k+(T.k==1?" prenotazione":" prenotazioni")+" · "+T.n+(T.n==1?" notte":" notti")+"</div></div>";
+ var mx=Math.max.apply(null,mm.map(function(r){return Math.max(r.t,r.e)}).concat([1]));
+ $("bars").innerHTML=mm.map(function(r,i){return"<div><span><i style='height:"+(Math.max(r.t,0)/mx*100)+"%;background:var(--ac)'></i><i style='height:"+(r.e/mx*100)+"%;background:var(--out)'></i></span>"+M[i][0]+"</div>"}).join("");
+ $("mt").innerHTML=tbl(["Mese","Netto","Spese","Utile"],mm.map(function(r,i){var u=r.t-r.e;return[M[i],eur(r.t),eur(r.e),'<span class="'+cls(u)+'">'+eur(u)+"</span>"]}),["Totale",eur(T.t),eur(T.e),'<span class="'+cls(pr)+'">'+eur(pr)+"</span>"]);
+ $("md").innerHTML=tbl(["Mese","Notti","Lordo","Comm.","Cedolare","Netto"],mm.map(function(r,i){return[M[i],r.n,eur(r.g),eur(r.f),eur(r.c),eur(r.t)]}),["Tot.",T.n,eur(T.g),eur(T.f),eur(T.c),eur(T.t)]);
+ $("yt").innerHTML=tbl(["Anno","Netto","Spese","Utile"],ys.map(function(a){var n=0,s=0;fb.forEach(function(b){if(b.i.slice(0,4)==a)n+=b.n});fe.forEach(function(x){if(x.d.slice(0,4)==a)s+=x.a});return[a,eur(n),eur(s),'<span class="'+cls(n-s)+'">'+eur(n-s)+"</span>"]}));
+ $("gt").innerHTML=tbl(["Struttura","Netto","Spese","Utile"],ST.map(function(s){var n=0,e=0;S.b.forEach(function(b){if(b.s==s.id&&b.i.slice(0,4)==y)n+=b.n});S.e.forEach(function(x){if(x.s==s.id&&x.d.slice(0,4)==y)e+=x.a});return[esc(s.n)+" <small style='color:var(--mut)'>"+Math.round(s.r*100)+"%</small>",eur(n),eur(e),'<span class="'+cls(n-e)+'">'+eur(n-e)+"</span>"]}));
+ var Q={};fb.forEach(function(b){if(b.i.slice(0,4)==y){Q[b.p]=Q[b.p]||{k:0,t:0};Q[b.p].k++;Q[b.p].t+=b.n}});
+ $("pt").innerHTML=tbl(["Portale","Pren.","Netto"],PORT.filter(function(p){return Q[p]}).map(function(p){return[p,Q[p].k,eur(Q[p].t)]}));
+ var bs=fb.filter(function(b){return b.i.slice(0,4)==y}).sort(function(a,b){return b.i<a.i?-1:1});
+ $("bl").innerHTML=bs.length?bs.map(function(b){return"<div class='item' data-b='"+esc(b.id)+"'><div><b>"+esc(b.g||"Ospite n.d.")+"</b><small>"+esc(stx(b.s).n)+" · "+esc(b.p)+"</small><small>"+fd(b.i)+" → "+fd(b.o)+" · "+nights(b)+" notti"+(b.u?" · "+b.u+" osp.":"")+"</small></div><div class='amt'>"+eur(b.n)+"<small>"+(b.l!=null?"lordo "+eur(b.l):"netto")+"</small></div></div>"}).join(""):"<p class='note'>Nessuna prenotazione nel "+y+". Tocca + per aggiungerne una.</p>";
+ var es=fe.filter(function(x){return x.d.slice(0,4)==y}).sort(function(a,b){return b.d<a.d?-1:1});
+ $("el").innerHTML=es.length?es.map(function(x){return"<div class='item' data-e='"+esc(x.id)+"'><div><b>"+esc(x.c)+"</b><small>"+esc(stx(x.s).n)+" · "+fd(x.d)+"</small>"+(x.t?"<small>"+esc(x.t)+"</small>":"")+"</div><div class='amt neg'>"+eur(x.a)+"</div></div>"}).join(""):"<p class='note'>Nessuna spesa nel "+y+". Tocca + per aggiungerne una.</p>";
+ $("lbk").textContent=LB?"Ultimo backup: "+new Date(LB).toLocaleDateString("it-IT")+".":"Nessun backup ancora fatto.";
+}
+
+/* prenotazione */
+function fillU(){var mx=stx($("b_s").value).m,u=$("b_u"),v=+u.value;if(u.options.length==mx)return;u.innerHTML="";for(var k=1;k<=mx;k++){var o=document.createElement("option");o.value=k;o.textContent=k+(k==1?" ospite":" ospiti");u.appendChild(o)}u.value=(v>=1&&v<=mx)?v:Math.min(2,mx)}
+function calc(src){
+ fillU();
+ var r=stx($("b_s").value).r,dir=$("b_p").value=="Diretta",f=dir?0:(num($("b_f").value)||0),pc=Math.round(r*100);
+ $("b_fw").classList.toggle("hide",dir);if(dir)$("b_f").value="";
+ $("b_nl").textContent="Netto dopo cedolare "+pc+"% (€)";
+ if(src=="l")last="l";if(src=="n")last="n";
+ if(!$("b_man").checked){
+  if(last=="l"){var L=num($("b_l").value);$("b_n").value=L==null?"":r2(L*(1-r)-f)}
+  else{var N=num($("b_n").value);$("b_l").value=(dir||N==null)?"":r2((N+f)/(1-r))}
+ }
+ var l=num($("b_l").value);
+ $("b_h").textContent=l!=null?"Cedolare secca "+pc+"%: "+eur(l*r):"Puoi inserire solo il lordo, solo il netto, oppure entrambi.";
+}
+["b_l","b_n","b_f","b_s","b_p","b_man"].forEach(function(k){$(k).addEventListener(k=="b_l"||k=="b_n"||k=="b_f"?"input":"change",function(){calc(k=="b_l"?"l":k=="b_n"?"n":"")})});
+function openB(id){
+ var it=id?S.b.filter(function(x){return x.id==id})[0]:null;EID=it?it.id:null;
+ $("bt").textContent=it?"Modifica prenotazione":"Nuova prenotazione";
+ $("delB").classList.toggle("hide",!it);$("delB").textContent="Elimina prenotazione";pend=null;
+ $("b_s").value=it?it.s:(F!="all"?F:"m");$("b_p").value=it?it.p:"Airbnb";$("b_man").checked=!!it;last="l";fillU();
+ $("b_g").value=it&&it.g||"";if(it&&it.u)$("b_u").value=it.u;
+ $("b_i").value=it?it.i:"";$("b_o").value=it?it.o:"";$("b_l").value=it&&it.l!=null?it.l:"";$("b_f").value=it&&it.f?it.f:"";$("b_n").value=it?it.n:"";
+ calc();$("shB").classList.remove("hide");$("shB").scrollTop=0;
+}
+$("cancB").onclick=function(){$("shB").classList.add("hide")};
+$("addB").onclick=function(){
+ var i=$("b_i").value,o=$("b_o").value,dir=$("b_p").value=="Diretta",s=$("b_s").value,r=stx(s).r;
+ var L=num($("b_l").value),N=num($("b_n").value),f=dir?0:(num($("b_f").value)||0);
+ if(!i||!o){say("Inserisci check-in e check-out.",1);return}
+ if(o<i){say("Il check-out non può essere prima del check-in.",1);return}
+ if(L==null&&N==null){say("Inserisci almeno un importo: lordo o netto.",1);return}
+ if(N==null)N=r2(L*(1-r)-f);
+ var upd=!!EID,rec={id:EID||rid(),s:s,p:$("b_p").value,g:$("b_g").value.trim(),u:+$("b_u").value,i:i,o:o,l:L,f:f,c:L!=null?r2(L*r):0,n:N};
+ if(upd)S.b=S.b.map(function(x){return x.id==rec.id?rec:x});else S.b.push(rec);
+ if($("yr").querySelector("option[value='"+i.slice(0,4)+"']")||1)$("yr").value=i.slice(0,4);
+ save();$("shB").classList.add("hide");render();say(upd?"Prenotazione modificata.":"Prenotazione aggiunta.");
+};
+$("delB").onclick=function(){
+ if(pend!="B"){pend="B";this.textContent="Tocca ancora per eliminare";clearTimeout(pt);var b=this;pt=setTimeout(function(){pend=null;b.textContent="Elimina prenotazione"},5000);return}
+ S.b=S.b.filter(function(x){return x.id!=EID});pend=null;save();$("shB").classList.add("hide");render();say("Prenotazione eliminata.");
+};
+/* spesa */
+function openE(id){
+ var it=id?S.e.filter(function(x){return x.id==id})[0]:null;EEID=it?it.id:null;
+ $("et").textContent=it?"Modifica spesa":"Nuova spesa";$("delE").classList.toggle("hide",!it);$("delE").textContent="Elimina spesa";pend=null;
+ $("e_s").value=it?it.s:(F!="all"?F:"m");$("e_d").value=it?it.d:"";$("e_c").value=it?it.c:CATS[0];$("e_t").value=it&&it.t||"";$("e_a").value=it?it.a:"";
+ $("shE").classList.remove("hide");$("shE").scrollTop=0;
+}
+$("cancE").onclick=function(){$("shE").classList.add("hide")};
+$("addE").onclick=function(){
+ var d=$("e_d").value,a=num($("e_a").value);
+ if(!d||a==null){say("Inserisci data e importo.",1);return}
+ var upd=!!EEID,rec={id:EEID||rid(),s:$("e_s").value,d:d,c:$("e_c").value,t:$("e_t").value.trim(),a:a};
+ if(upd)S.e=S.e.map(function(x){return x.id==rec.id?rec:x});else S.e.push(rec);
+ $("yr").value=d.slice(0,4);save();$("shE").classList.add("hide");render();say(upd?"Spesa modificata.":"Spesa aggiunta.");
+};
+$("delE").onclick=function(){
+ if(pend!="E"){pend="E";this.textContent="Tocca ancora per eliminare";clearTimeout(pt);var b=this;pt=setTimeout(function(){pend=null;b.textContent="Elimina spesa"},5000);return}
+ S.e=S.e.filter(function(x){return x.id!=EEID});pend=null;save();$("shE").classList.add("hide");render();say("Spesa eliminata.");
+};
+
+/* import CSV */
+function parseCSV(t){
+ t=t.replace(/^\uFEFF/,"");var h=t.split("\n")[0],d=[";","\t",","].map(function(c){return[c,h.split(c).length]}).sort(function(a,b){return b[1]-a[1]})[0][0];
+ var rows=[],row=[],cur="",q=false;
+ for(var i=0;i<t.length;i++){var c=t[i];
+  if(q){if(c=='"'){if(t[i+1]=='"'){cur+='"';i++}else q=false}else cur+=c}
+  else if(c=='"')q=true;else if(c==d){row.push(cur);cur=""}
+  else if(c=="\n"||c=="\r"){if(c=="\r"&&t[i+1]=="\n")i++;row.push(cur);cur="";if(row.some(function(x){return x.trim()}))rows.push(row);row=[]}
+  else cur+=c}
+ row.push(cur);if(row.some(function(x){return x.trim()}))rows.push(row);return rows;
+}
+function guess(h,pats){for(var p=0;p<pats.length;p++)for(var i=0;i<h.length;i++)if(pats[p].test(h[i].toLowerCase()))return i;return -1}
+var MK=["g","i","o","u","l","f","n","s"],mv=function(k){return +$("m_"+k).value};
+function buildIR(){
+ IR=CSV.r.map(function(row){
+  var cell=function(k){var ix=mv(k);return ix>-1?(row[ix]||"").trim():""};
+  var l=num(cell("l")),f=num(cell("f")),n=num(cell("n")),u=parseInt(cell("u"),10),i=cell("i"),o=cell("o");
+  return{x:!/cancel|annull|no.?show|rifiut/i.test(cell("s")),g:cell("g"),i:pd(i)||i,o:pd(o)||o,u:isNaN(u)?"":String(u),l:l==null?"":String(l),f:f==null?"":String(Math.abs(f)),n:n==null?"":String(n)};
+ });drawIR();
+}
+function drawIR(){
+ var C=["g","i","o","u","l","f","n"];
+ $("ipv").innerHTML="<thead><tr><th></th><th>Ospite</th><th>Check-in</th><th>Check-out</th><th>Osp.</th><th>Lordo</th><th>Comm.</th><th>Netto</th></tr></thead><tbody>"+IR.map(function(r,ix){return"<tr><td><input type='checkbox' data-r='"+ix+"' data-c='x'"+(r.x?" checked":"")+"></td>"+C.map(function(c){var bad=(c=="i"||c=="o")&&!pd(r[c]);return"<td><input data-r='"+ix+"' data-c='"+c+"' value=\""+esc(r[c])+"\" style='min-width:"+(c=="g"?"130":"100")+"px;min-height:38px;padding:4px 6px"+(bad?";border-color:var(--out)":"")+"'></td>"}).join("")+"</tr>"}).join("")+"</tbody>";
+ $("i_m").textContent=IR.length+" righe lette, "+IR.filter(function(r){return r.x}).length+" selezionate. Date in rosso non valide: correggile (aaaa-mm-gg o gg/mm/aaaa).";
+}
+$("ipv").addEventListener("change",function(ev){var t=ev.target,r=IR[+t.dataset.r];if(!r)return;if(t.dataset.c=="x")r.x=t.checked;else r[t.dataset.c]=t.value;drawIR()});
+MK.forEach(function(k){$("m_"+k).onchange=function(){if(CSV)buildIR()}});
+$("i_f").onchange=function(){
+ var f=this.files[0];if(!f)return;var fr=new FileReader();$("i_m").textContent="Lettura del file in corso…";
+ fr.onerror=function(){$("i_m").textContent="Impossibile leggere il file.";say("Impossibile leggere il file.",1)};
+ fr.onload=function(){
+  var rows=parseCSV(String(fr.result));
+  if(rows.length<2){$("i_m").textContent="File vuoto o non leggibile.";say("File vuoto o non leggibile.",1);return}
+  CSV={h:rows[0].map(function(x){return x.trim()}),r:rows.slice(1)};
+  var o=[["-1","(nessuna)"]].concat(CSV.h.map(function(x,i){return[String(i),x]}));
+  MK.forEach(function(k){opts("m_"+k,o)});
+  $("m_g").value=guess(CSV.h,[/guest name|nome ospite|nome del|ospite|guest/,/nome|name/]);
+  $("m_i").value=guess(CSV.h,[/check-?in/,/arriv/,/start date|data di inizio|inizio/]);
+  $("m_o").value=guess(CSV.h,[/check-?out/,/partenza/,/end date|data di fine|fine/]);
+  $("m_u").value=guess(CSV.h,[/number of guests|n\. ?ospiti|numero.*ospiti|persone|people|adults|adulti|guests|ospiti/]);
+  $("m_l").value=guess(CSV.h,[/gross|lordo/,/total payment|totale/,/price|prezzo/,/amount|importo/]);
+  $("m_f").value=guess(CSV.h,[/commission amount|importo commissione/,/host fee|service fee|costi di servizio/,/commissione|commission/]);
+  $("m_n").value=guess(CSV.h,[/paid out|payout|incassat|netto/]);
+  $("m_s").value=guess(CSV.h,[/status|stato/]);
+  $("i_map").classList.remove("hide");buildIR();say("File letto: "+CSV.r.length+" righe.");
+ };
+ fr.readAsText(f);
+};
+$("i_go").onclick=async function(){
+ if(!CSV)return;
+ var s=$("i_s").value,p=$("i_p").value,r=stx(s).r,n=0,dup=0,bad=0,sel=IR.filter(function(x){return x.x}),pg=$("ipg"),btn=$("i_go");
+ if(!sel.length){say("Nessuna riga selezionata.",1);return}
+ btn.disabled=true;pg.classList.remove("hide");pg.max=sel.length;pg.value=0;
+ for(var k=0;k<sel.length;k++){
+  var x=sel[k],i=pd(x.i),o=pd(x.o),L=num(x.l),N=num(x.n),f=Math.abs(num(x.f)||0),u=parseInt(x.u,10);
+  if(!i||!o||o<i||(L==null&&N==null))bad++;
+  else{
+   if(L==null&&N!=null)L=r2((N+f)/(1-r));
+   var c=r2(L*r);if(N==null)N=r2(L-c-f);
+   if(S.b.some(function(b){return b.s==s&&b.p==p&&b.i==i&&b.o==o&&b.g==x.g&&b.l==L}))dup++;
+   else{var rec={id:rid(),s:s,p:p,g:x.g,i:i,o:o,l:L,f:f,c:c,n:N};if(!isNaN(u))rec.u=u;S.b.push(rec);n++}
+  }
+  pg.value=k+1;$("i_m").textContent="Importazione "+(k+1)+" di "+sel.length+"…";
+  if(k%20==0)await new Promise(function(z){setTimeout(z,0)});
+ }
+ save();var msg="Importate "+n+" prenotazioni. Già presenti: "+dup+". Non valide: "+bad+".";
+ $("i_m").textContent=msg;say(msg,bad&&!n);btn.disabled=false;pg.classList.add("hide");
+ if(!bad){CSV=null;IR=[];$("i_map").classList.add("hide");$("i_f").value=""}
+ render();
+};
+
+/* backup ed esportazione (menu Condividi di iPhone) */
+async function out(name,mime,data){
+ var f=null;try{f=new File([data],name,{type:mime})}catch(e){}
+ if(f&&navigator.canShare&&navigator.canShare({files:[f]})){
+  try{await navigator.share({files:[f],title:name});return true}catch(e){if(e&&e.name=="AbortError")return false}
+ }
+ var a=document.createElement("a"),u=URL.createObjectURL(new Blob([data],{type:mime}));a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(u);a.remove()},1500);return true;
+}
+$("bkp").onclick=function(){
+ out("backup-affitti-"+new Date().toISOString().slice(0,10)+".json","application/json",JSON.stringify({v:1,b:S.b,e:S.e})).then(function(ok){
+  if(ok){LB=Date.now();try{localStorage.setItem("lastbk",String(LB))}catch(e){}render();say("Backup pronto: controlla di averlo salvato in File.")}});
+};
+$("rst").onchange=function(){
+ var f=this.files[0];if(!f)return;var fr=new FileReader();
+ fr.onload=function(){try{
+  var d=norm(JSON.parse(fr.result));
+  if($("r_mode").value=="rep"){if(!confirm("Sostituire tutti i dati di questo dispositivo con quelli del backup?")){$("rst").value="";return}S=d}
+  else["b","e"].forEach(function(k){d[k].forEach(function(x){if(!x.id)x.id=rid();var i=S[k].findIndex(function(y){return y.id==x.id});if(i>-1)S[k][i]=x;else S[k].push(x)})});
+  ensureIds();save();render();say("Backup ripristinato.")
+ }catch(e){say("File di backup non valido.",1)}$("rst").value=""};
+ fr.readAsText(f);
+};
+function exp(name,head,rows){
+ var q=function(v){return'"'+String(v==null?"":v).replace(/"/g,'""')+'"'};
+ out(name,"text/csv",String.fromCharCode(65279)+[head].concat(rows).map(function(r){return r.map(q).join(";")}).join("\r\n"));
+}
+var cm=function(n){return n==null?"":String(r2(n)).replace(".",",")};
+$("xb").onclick=function(){exp("prenotazioni.csv",["Struttura","Portale","Ospite","Ospiti","Check-in","Check-out","Notti","Lordo","Commissione","Cedolare","Netto"],S.b.filter(flt).map(function(b){return[stx(b.s).n,b.p,b.g,b.u||"",b.i,b.o,nights(b),cm(b.l),cm(b.f),cm(b.c),cm(b.n)]}))};
+$("xe").onclick=function(){exp("spese.csv",["Struttura","Data","Categoria","Descrizione","Importo"],S.e.filter(flt).map(function(x){return[stx(x.s).n,x.d,x.c,x.t,cm(x.a)]}))};
+
+/* avvio */
+opts("b_p",PORT.map(function(p){return[p,p]}));opts("e_c",CATS.map(function(c){return[c,c]}));
+["b_s","i_s","e_s"].forEach(function(k){opts(k,ST.map(function(s){return[s.id,s.n+" ("+Math.round(s.r*100)+"%)"]}))});
+$("fs").innerHTML="<button data-f='all' class='on'>Tutte</button>"+ST.map(function(s){return"<button data-f='"+s.id+"'>"+esc(s.n)+"</button>"}).join("");
+function tab(t){TAB=t;["sum","bk","ex","more"].forEach(function(s){$(s).classList.toggle("hide",s!=t)});
+ document.querySelectorAll(".tabs button").forEach(function(b){b.classList.toggle("on",b.dataset.t==t)});
+ $("fab").classList.toggle("hide",t!="bk"&&t!="ex");window.scrollTo(0,0)}
+$("fab").onclick=function(){if(TAB=="bk")openB();else openE()};
+$("tgl").onclick=function(){var h=$("mdw").classList.toggle("hide");this.textContent=h?"Mostra dettaglio completo":"Nascondi dettaglio"};
+$("yr").onchange=render;
+document.addEventListener("click",function(ev){
+ var t=ev.target.closest?ev.target.closest("[data-t],[data-f],[data-b],[data-e]"):null;if(!t)return;
+ if(t.dataset.t)tab(t.dataset.t);
+ else if(t.dataset.f){F=t.dataset.f;document.querySelectorAll("#fs button").forEach(function(b){b.classList.toggle("on",b==t)});render()}
+ else if(t.dataset.b)openB(t.dataset.b);
+ else if(t.dataset.e)openE(t.dataset.e);
+});
+try{LB=+localStorage.getItem("lastbk")||0;var t0=localStorage.getItem("ledger2");if(t0)S=norm(JSON.parse(t0))}catch(e){}
+if(ensureIds())save();
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+if(/iPhone|iPad/.test(navigator.userAgent)&&!navigator.standalone)$("inst").classList.remove("hide");
+if("serviceWorker" in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register("sw.js").catch(function(){});
+$("yr").innerHTML="<option>"+Y+"</option>";calc();render();
+</script>
+</body>
+</html>
