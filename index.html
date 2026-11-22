@@ -51,6 +51,11 @@ th{font-size:12px;color:var(--mut);font-weight:500}tfoot td{font-weight:700}
 .sheet h1{margin-bottom:4px}.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.g2>div{min-width:0}input[type=date]{min-width:0;-webkit-appearance:none;appearance:none;text-align:left}
 #tt{position:fixed;left:14px;right:14px;bottom:calc(var(--tab) + env(safe-area-inset-bottom,0px) + 84px);padding:12px;border-radius:12px;z-index:30;text-align:center;font-size:15px}
 progress{width:100%;height:14px;margin-top:10px}
+.dbtn{width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;font-size:16px;text-align:left}.dbtn.ph{color:var(--mut)}
+.cn{min-width:44px;min-height:44px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font-size:22px}
+.cw,.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}.cw{font-size:12px;color:var(--mut);margin:6px 0 4px}
+.cd{min-height:44px;border:0;border-radius:10px;background:transparent;color:var(--tx);font:inherit;font-size:16px}
+.cd.in{background:rgba(31,111,92,.2)}.cd.st,.cd.en{background:var(--ac);color:#fff;font-weight:700}.cd.td{box-shadow:inset 0 0 0 1px var(--ac)}
 </style>
 </head>
 <body>
@@ -67,9 +72,9 @@ progress{width:100%;height:14px;margin-top:10px}
   <p class="note">Le prenotazioni contano nel mese del check-in. Netto = lordo − commissione − cedolare.</p></div>
  <div class="card"><h2>Storico per anno</h2><table id="yt"></table></div>
  <div class="card"><h2>Per struttura</h2><table id="gt"></table></div>
- <div class="card"><h2>Per portale</h2><table id="pt"></table></div>
+ <div class="card"><h2>Per portale</h2><div class="scroll"><table id="pt"></table></div></div>
 </section>
-<section id="bk" class="hide"><div id="bl"></div></section>
+<section id="bk" class="hide"><input id="q" type="search" placeholder="Cerca per nome, data o cifra" autocomplete="off" style="margin-bottom:8px"><p class="note" id="qn" style="margin:0 0 8px"></p><div id="bl"></div></section>
 <section id="ex" class="hide"><div id="el"></div></section>
 <section id="more" class="hide">
  <div class="card warn hide" id="inst"><b>Importante su iPhone</b><p class="note" style="color:inherit">Tocca Condividi → “Aggiungi alla schermata Home” e usa solo quell’icona. I dati dell’icona e quelli di Safari sono separati: se inserisci in uno non li trovi nell’altro.</p></div>
@@ -104,9 +109,10 @@ progress{width:100%;height:14px;margin-top:10px}
  <h1 id="bt">Nuova prenotazione</h1>
  <label>Struttura</label><select id="b_s"></select>
  <label>Portale</label><select id="b_p"></select>
- <label>Ospite (principale)</label><input id="b_g" autocomplete="off">
+ <label>Ospite (nome cognome)</label><input id="b_g" autocomplete="off" autocapitalize="words">
  <label>Numero ospiti</label><select id="b_u"></select>
- <div class="g2"><div><label>Check-in</label><input id="b_i" type="date"></div><div><label>Check-out</label><input id="b_o" type="date"></div></div>
+ <div class="g2"><div><label>Check-in</label><button type="button" class="dbtn ph" id="b_ib">Seleziona</button></div><div><label>Check-out</label><button type="button" class="dbtn ph" id="b_ob">Seleziona</button></div></div>
+ <input type="hidden" id="b_i"><input type="hidden" id="b_o"><p class="note" id="b_nt" style="margin:6px 0 0"></p>
  <label>Importo lordo (€) — facoltativo</label><input id="b_l" inputmode="decimal">
  <div id="b_fw"><label>Commissione portale (€) — facoltativa</label><input id="b_f" inputmode="decimal"></div>
  <label id="b_nl">Netto (€)</label><input id="b_n" inputmode="decimal">
@@ -123,6 +129,14 @@ progress{width:100%;height:14px;margin-top:10px}
  <label>Importo (€)</label><input id="e_a" inputmode="decimal">
  <button class="btn" id="addE">Salva</button><button class="btn sec" id="cancE">Annulla</button><button class="btn dng hide" id="delE">Elimina spesa</button>
 </div>
+<div id="cal" class="hide" style="position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center">
+ <div style="background:var(--bg);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:14px 14px calc(env(safe-area-inset-bottom,0px) + 14px)">
+  <div style="display:flex;gap:8px;align-items:center"><button type="button" class="cn" id="cprev">‹</button><select id="cm" style="flex:1;width:auto"></select><select id="cy" style="flex:1;width:auto"></select><button type="button" class="cn" id="cnext">›</button></div>
+  <div class="cw"><span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span></div>
+  <div class="cg" id="cg"></div>
+  <p class="note" id="cs" style="text-align:center;min-height:22px;margin:10px 0"></p>
+  <div style="display:flex;gap:8px"><button type="button" class="btn sec" id="cclr" style="margin:0">Cancella date</button><button type="button" class="btn sec" id="ccn" style="margin:0">Chiudi</button></div>
+ </div></div>
 <div id="tt" class="hide"></div>
 <script>
 var ST=[{id:"m",n:"MenoUno House",r:.21,m:4},{id:"d",n:"Dimora Irene",r:.26,m:6}];
@@ -152,6 +166,11 @@ function ensureIds(){var ch=false;S.b.concat(S.e).forEach(function(x){if(!x.id){
 function save(){try{localStorage.setItem("ledger2",JSON.stringify(S))}catch(e){say("Impossibile salvare su questo dispositivo.",1)}}
 function years(){var s={};for(var a=2020;a<=Y+1;a++)s[a]=1;S.b.forEach(function(b){s[b.i.slice(0,4)]=1});S.e.forEach(function(x){s[x.d.slice(0,4)]=1});return Object.keys(s).sort()}
 function tbl(h,rows,foot){return"<thead><tr>"+h.map(function(x){return"<th>"+x+"</th>"}).join("")+"</tr></thead><tbody>"+rows.map(function(r){return"<tr>"+r.map(function(c){return"<td>"+c+"</td>"}).join("")+"</tr>"}).join("")+"</tbody>"+(foot?"<tfoot><tr>"+foot.map(function(c){return"<td>"+c+"</td>"}).join("")+"</tr></tfoot>":"")}
+var MF=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
+function nz(s){return String(s==null?"":s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
+function dm(d){return d.slice(8,10)+"/"+d.slice(5,7)+"/"+d.slice(0,4)}
+function amt(v){if(v==null||v==="")return"";var f=r2(v).toFixed(2);return v+" "+String(v).replace(".",",")+" "+f+" "+f.replace(".",",")+" "+new Intl.NumberFormat("it-IT",{minimumFractionDigits:2}).format(v)}
+function hay(b){return nz([b.g,stx(b.s).n,b.p,b.i,b.o,dm(b.i),dm(b.o),fd(b.i),fd(b.o),MF[+b.i.slice(5,7)-1],MF[+b.o.slice(5,7)-1],b.u?b.u+" ospiti":"",amt(b.l),amt(b.f),amt(b.c),amt(b.n)].join(" | "))}
 function render(){try{R()}catch(e){say("Errore di visualizzazione: "+e.message,1)}}
 function R(){
  var ys=years(),sel=$("yr"),cur=sel.value||String(Y);
@@ -163,17 +182,19 @@ function R(){
  mm.forEach(function(r){for(var k in T)T[k]+=r[k]});var pr=T.t-T.e;
  var nb=S.b.length+S.e.length,days=LB?Math.floor((Date.now()-LB)/864e5):null,bb=$("bkb");
  bb.classList.toggle("hide",!(nb&&(!LB||days>=14)));bb.innerHTML=!LB?"<b>Nessun backup fatto.</b><br>Vai su Altro e salva un backup: se perdi i dati dal telefono non si recuperano.":"<b>Ultimo backup "+days+" giorni fa.</b><br>Vai su Altro e salvane uno nuovo.";
- $("kpi").innerHTML=[["Entrate nette",T.t,"pos"],["Spese",T.e,"neg"],["Utile",pr,cls(pr)],["Cedolare",T.c,""]].map(function(k){return'<div class="card"><div class="kpi '+k[2]+'">'+eur(k[1])+"<small>"+k[0]+" "+y+"</small></div></div>"}).join("")+'<div class="card" style="grid-column:1/3"><div class="kpi">'+T.k+(T.k==1?" prenotazione":" prenotazioni")+" · "+T.n+(T.n==1?" notte":" notti")+"</div></div>";
+ $("kpi").innerHTML=[["Entrate nette",T.t,"pos"],["Spese",T.e,"neg"],["Utile",pr,cls(pr)],["Cedolare",T.c,""],["Commissioni",T.f,""]].map(function(k){return'<div class="card"><div class="kpi '+k[2]+'">'+eur(k[1])+"<small>"+k[0]+" "+y+"</small></div></div>"}).join("")+'<div class="card"><div class="kpi">'+T.k+" · "+T.n+"<small>prenotazioni · notti "+y+"</small></div></div>";
  var mx=Math.max.apply(null,mm.map(function(r){return Math.max(r.t,r.e)}).concat([1]));
  $("bars").innerHTML=mm.map(function(r,i){return"<div><span><i style='height:"+(Math.max(r.t,0)/mx*100)+"%;background:var(--ac)'></i><i style='height:"+(r.e/mx*100)+"%;background:var(--out)'></i></span>"+M[i][0]+"</div>"}).join("");
  $("mt").innerHTML=tbl(["Mese","Netto","Spese","Utile"],mm.map(function(r,i){var u=r.t-r.e;return[M[i],eur(r.t),eur(r.e),'<span class="'+cls(u)+'">'+eur(u)+"</span>"]}),["Totale",eur(T.t),eur(T.e),'<span class="'+cls(pr)+'">'+eur(pr)+"</span>"]);
  $("md").innerHTML=tbl(["Mese","Notti","Lordo","Comm.","Cedolare","Netto"],mm.map(function(r,i){return[M[i],r.n,eur(r.g),eur(r.f),eur(r.c),eur(r.t)]}),["Tot.",T.n,eur(T.g),eur(T.f),eur(T.c),eur(T.t)]);
  $("yt").innerHTML=tbl(["Anno","Netto","Spese","Utile"],ys.map(function(a){var n=0,s=0;fb.forEach(function(b){if(b.i.slice(0,4)==a)n+=b.n});fe.forEach(function(x){if(x.d.slice(0,4)==a)s+=x.a});return[a,eur(n),eur(s),'<span class="'+cls(n-s)+'">'+eur(n-s)+"</span>"]}));
  $("gt").innerHTML=tbl(["Struttura","Netto","Spese","Utile"],ST.map(function(s){var n=0,e=0;S.b.forEach(function(b){if(b.s==s.id&&b.i.slice(0,4)==y)n+=b.n});S.e.forEach(function(x){if(x.s==s.id&&x.d.slice(0,4)==y)e+=x.a});return[esc(s.n)+" <small style='color:var(--mut)'>"+Math.round(s.r*100)+"%</small>",eur(n),eur(e),'<span class="'+cls(n-e)+'">'+eur(n-e)+"</span>"]}));
- var Q={};fb.forEach(function(b){if(b.i.slice(0,4)==y){Q[b.p]=Q[b.p]||{k:0,t:0};Q[b.p].k++;Q[b.p].t+=b.n}});
- $("pt").innerHTML=tbl(["Portale","Pren.","Netto"],PORT.filter(function(p){return Q[p]}).map(function(p){return[p,Q[p].k,eur(Q[p].t)]}));
- var bs=fb.filter(function(b){return b.i.slice(0,4)==y}).sort(function(a,b){return b.i<a.i?-1:1});
- $("bl").innerHTML=bs.length?bs.map(function(b){return"<div class='item' data-b='"+esc(b.id)+"'><div><b>"+esc(b.g||"Ospite n.d.")+"</b><small>"+esc(stx(b.s).n)+" · "+esc(b.p)+"</small><small>"+fd(b.i)+" → "+fd(b.o)+" · "+nights(b)+" notti"+(b.u?" · "+b.u+" osp.":"")+"</small></div><div class='amt'>"+eur(b.n)+"<small>"+(b.l!=null?"lordo "+eur(b.l):"netto")+"</small></div></div>"}).join(""):"<p class='note'>Nessuna prenotazione nel "+y+". Tocca + per aggiungerne una.</p>";
+ var Q={};fb.forEach(function(b){if(b.i.slice(0,4)==y){Q[b.p]=Q[b.p]||{k:0,t:0,n:0,u:0};Q[b.p].k++;Q[b.p].t+=b.n;Q[b.p].n+=nights(b);Q[b.p].u+=b.u||0}});
+ $("pt").innerHTML=tbl(["Portale","Pren.","Notti","Ospiti","Netto"],PORT.filter(function(p){return Q[p]}).map(function(p){return[p,Q[p].k,Q[p].n,Q[p].u,eur(Q[p].t)]}));
+ var qs=nz($("q").value).split(/\s+/).filter(Boolean).map(function(w){return/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(w)?w.replace(/\./g,""):w}),srch=qs.length>0;
+ var bs=(srch?fb.filter(function(b){var h=hay(b);return qs.every(function(w){return h.indexOf(w)>-1})}):fb.filter(function(b){return b.i.slice(0,4)==y})).sort(function(a,b){return b.i<a.i?-1:1});
+ $("qn").textContent=srch?bs.length+(bs.length==1?" prenotazione trovata":" prenotazioni trovate")+" (tutti gli anni)":"";
+ $("bl").innerHTML=bs.length?bs.map(function(b){return"<div class='item' data-b='"+esc(b.id)+"'><div><b>"+esc(b.g||"Ospite n.d.")+"</b><small>"+esc(stx(b.s).n)+" · "+esc(b.p)+"</small><small>"+fd(b.i)+" → "+fd(b.o)+" · "+nights(b)+" notti"+(b.u?" · "+b.u+" osp.":"")+"</small></div><div class='amt'>"+eur(b.n)+"<small>"+(b.l!=null?"lordo "+eur(b.l):"netto")+"</small></div></div>"}).join(""):"<p class='note'>"+(srch?"Nessuna prenotazione trovata.":"Nessuna prenotazione nel "+y+". Tocca + per aggiungerne una.")+"</p>";
  var es=fe.filter(function(x){return x.d.slice(0,4)==y}).sort(function(a,b){return b.d<a.d?-1:1});
  $("el").innerHTML=es.length?es.map(function(x){return"<div class='item' data-e='"+esc(x.id)+"'><div><b>"+esc(x.c)+"</b><small>"+esc(stx(x.s).n)+" · "+fd(x.d)+"</small>"+(x.t?"<small>"+esc(x.t)+"</small>":"")+"</div><div class='amt neg'>"+eur(x.a)+"</div></div>"}).join(""):"<p class='note'>Nessuna spesa nel "+y+". Tocca + per aggiungerne una.</p>";
  undoUI();$("lbk").textContent=LB?"Ultimo backup: "+new Date(LB).toLocaleDateString("it-IT")+".":"Nessun backup ancora fatto.";
@@ -202,7 +223,7 @@ function openB(id){
  $("b_s").value=it?it.s:(F!="all"?F:"m");$("b_p").value=it?it.p:"Airbnb";$("b_man").checked=!!it;last="l";fillU();
  $("b_g").value=it&&it.g||"";if(it&&it.u)$("b_u").value=it.u;
  $("b_i").value=it?it.i:"";$("b_o").value=it?it.o:"";$("b_l").value=it&&it.l!=null?it.l:"";$("b_f").value=it&&it.f?it.f:"";$("b_n").value=it?it.n:"";
- calc();$("shB").classList.remove("hide");$("shB").scrollTop=0;
+ calc();showDates();$("shB").classList.remove("hide");$("shB").scrollTop=0;
 }
 $("cancB").onclick=function(){$("shB").classList.add("hide")};
 $("addB").onclick=function(){
@@ -358,6 +379,54 @@ var cm=function(n){return n==null?"":String(r2(n)).replace(".",",")};
 $("xb").onclick=function(){exp("prenotazioni.csv",["Struttura","Portale","Ospite","Ospiti","Check-in","Check-out","Notti","Lordo","Commissione","Cedolare","Netto"],S.b.filter(flt).map(function(b){return[stx(b.s).n,b.p,b.g,b.u||"",b.i,b.o,nights(b),cm(b.l),cm(b.f),cm(b.c),cm(b.n)]}))};
 $("xe").onclick=function(){exp("spese.csv",["Struttura","Data","Categoria","Descrizione","Importo"],S.e.filter(flt).map(function(x){return[stx(x.s).n,x.d,x.c,x.t,cm(x.a)]}))};
 
+/* nome: maiuscola dopo spazio, trattino, apostrofo */
+$("b_g").addEventListener("input",function(){
+ var v=this.value,n=v.replace(/(^|[\s\-'’])(\p{L})/gu,function(m,a,b){return a+b.toUpperCase()});
+ if(n!==v){var p=this.selectionStart;this.value=n;try{this.setSelectionRange(p,p)}catch(e){}}
+});
+/* calendario a intervallo: due tocchi = check-in e check-out */
+var MFC=["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+var cal={y:0,m:0,s:null,e:null,ph:0};
+var isoD=function(y,m,d){return y+"-"+("0"+(m+1)).slice(-2)+"-"+("0"+d).slice(-2)};
+var fl=function(d){return(+d.slice(8,10))+" "+M[+d.slice(5,7)-1]+" "+d.slice(0,4)};
+var nn=function(a,b){return Math.round((new Date(b)-new Date(a))/864e5)};
+function showDates(){
+ var i=$("b_i").value,o=$("b_o").value;
+ $("b_ib").textContent=i?fl(i):"Seleziona";$("b_ib").classList.toggle("ph",!i);
+ $("b_ob").textContent=o?fl(o):"Seleziona";$("b_ob").classList.toggle("ph",!o);
+ $("b_nt").textContent=i&&o&&o>=i?nn(i,o)+(nn(i,o)==1?" notte":" notti"):"";
+}
+function openCal(ph){
+ cal.s=$("b_i").value||null;cal.e=$("b_o").value||null;cal.ph=(ph==1&&cal.s)?1:0;
+ var n=new Date(),base=cal.s||cal.e||isoD(n.getFullYear(),n.getMonth(),n.getDate());
+ cal.y=+base.slice(0,4);cal.m=+base.slice(5,7)-1;
+ $("cal").classList.remove("hide");drawCal();
+}
+function drawCal(){
+ var ys="";for(var y=2020;y<=Math.max(Y+2,cal.y);y++)ys+="<option>"+y+"</option>";
+ $("cy").innerHTML=ys;$("cy").value=cal.y;
+ $("cm").innerHTML=MFC.map(function(m,i){return"<option value='"+i+"'>"+m+"</option>"}).join("");$("cm").value=cal.m;
+ var off=(new Date(cal.y,cal.m,1).getDay()+6)%7,dim=new Date(cal.y,cal.m+1,0).getDate(),n=new Date(),td=isoD(n.getFullYear(),n.getMonth(),n.getDate()),h="";
+ for(var i=0;i<off;i++)h+="<span></span>";
+ for(var d=1;d<=dim;d++){var k=isoD(cal.y,cal.m,d),c="cd";
+  if(k==cal.s)c+=" st";if(k==cal.e)c+=" en";if(cal.s&&cal.e&&k>cal.s&&k<cal.e)c+=" in";if(k==td)c+=" td";
+  h+="<button type='button' class='"+c+"' data-k='"+k+"'>"+d+"</button>"}
+ $("cg").innerHTML=h;
+ $("cs").textContent=!cal.s?"Tocca il giorno di check-in":(!cal.e?"Ora tocca il giorno di check-out":fl(cal.s)+" → "+fl(cal.e)+" · "+nn(cal.s,cal.e)+" notti");
+}
+function applyCal(){$("b_i").value=cal.s||"";$("b_o").value=cal.e||"";showDates();$("cal").classList.add("hide")}
+$("cg").addEventListener("click",function(ev){
+ var k=ev.target.dataset&&ev.target.dataset.k;if(!k)return;
+ if(cal.ph==0||!cal.s){cal.s=k;cal.e=null;cal.ph=1;drawCal();return}
+ if(k<cal.s){cal.s=k;cal.e=null;drawCal();return}
+ cal.e=k;cal.ph=0;drawCal();setTimeout(applyCal,280);
+});
+$("cprev").onclick=function(){cal.m--;if(cal.m<0){cal.m=11;cal.y--}if(cal.y<2020){cal.y=2020;cal.m=0}drawCal()};
+$("cnext").onclick=function(){cal.m++;if(cal.m>11){cal.m=0;cal.y++}drawCal()};
+$("cm").onchange=function(){cal.m=+this.value;drawCal()};$("cy").onchange=function(){cal.y=+this.value;drawCal()};
+$("cclr").onclick=function(){cal.s=null;cal.e=null;cal.ph=0;applyCal()};
+$("ccn").onclick=function(){$("cal").classList.add("hide")};
+$("b_ib").onclick=function(){openCal(0)};$("b_ob").onclick=function(){openCal(1)};
 /* avvio */
 opts("b_p",PORT.map(function(p){return[p,p]}));opts("e_c",CATS.map(function(c){return[c,c]}));
 ["b_s","i_s","e_s"].forEach(function(k){opts(k,ST.map(function(s){return[s.id,s.n+" ("+Math.round(s.r*100)+"%)"]}))});
@@ -367,7 +436,7 @@ function tab(t){TAB=t;["sum","bk","ex","more"].forEach(function(s){$(s).classLis
  $("fab").classList.toggle("hide",t!="bk"&&t!="ex");window.scrollTo(0,0)}
 $("fab").onclick=function(){if(TAB=="bk")openB();else openE()};
 $("tgl").onclick=function(){var h=$("mdw").classList.toggle("hide");this.textContent=h?"Mostra dettaglio completo":"Nascondi dettaglio"};
-$("yr").onchange=render;
+$("yr").onchange=render;$("q").addEventListener("input",render);
 document.addEventListener("click",function(ev){
  var t=ev.target.closest?ev.target.closest("[data-t],[data-f],[data-b],[data-e]"):null;if(!t)return;
  if(t.dataset.t)tab(t.dataset.t);
