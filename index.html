@@ -51,7 +51,7 @@ input[type=checkbox]{width:22px;min-height:22px;vertical-align:middle;margin-rig
 .sub{display:flex;align-items:center;gap:8px;margin:3px 0 2px;flex-wrap:wrap}.st{font-size:12px;color:var(--mut)}
 .pt{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;letter-spacing:.02em}
 .pa{background:var(--pab);color:var(--pa)}.pb{background:var(--pbb);color:var(--pb)}.pd{background:var(--pdb);color:var(--pd)}
-.pills{margin-top:6px}.pill{display:inline-block;font-size:12px;padding:2px 10px;border-radius:20px;background:var(--pill);color:var(--ac);margin-right:6px;font-weight:600}
+.pill.ov{background:var(--pab);color:var(--out)}.pills{margin-top:6px}.pill{display:inline-block;font-size:12px;padding:2px 10px;border-radius:20px;background:var(--pill);color:var(--ac);margin-right:6px;font-weight:600}
 .nt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:5px}.nt svg{width:13px;height:13px;vertical-align:-2px;margin-right:5px;stroke:var(--brass);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .amt{text-align:right;font-family:var(--serif);font-size:18px;font-weight:600;white-space:nowrap}
 table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
@@ -94,6 +94,7 @@ progress{width:100%;height:14px;margin-top:10px;accent-color:var(--ac)}
  <div class="card warn hide" id="bkb"></div>
  <div id="kpi"></div>
  <div class="card"><h2>Andamento mensile</h2><div class="bars" id="bars"></div><p class="note"><span class="pos">■</span> netto &nbsp;<span class="neg">■</span> spese</p></div>
+ <div class="card"><h2>Occupazione e prezzi</h2><div id="occ"></div></div>
  <div class="card"><h2>Per mese</h2><table id="mt"></table><button class="btn sec" id="tgl">Mostra dettaglio completo</button><div class="scroll hide" id="mdw" style="margin-top:10px"><table id="md"></table></div>
   <p class="note">Le prenotazioni contano nel mese del check-in. Netto = lordo − commissione − cedolare.</p></div>
  <div class="card"><h2>Storico per anno</h2><table id="yt"></table></div>
@@ -123,6 +124,7 @@ progress{width:100%;height:14px;margin-top:10px;accent-color:var(--ac)}
    <button class="btn" id="i_go">Importa le righe selezionate</button><button class="btn dng hide" id="i_stop">Interrompi importazione</button><button class="btn sec" id="i_cn">Annulla e scarta il file</button>
   </div><p class="note" id="i_m"></p><div id="i_undo" class="hide"><button class="btn sec" id="i_un"></button><p class="note">Rimuove solo le prenotazioni aggiunte con l’ultima importazione.</p></div></div>
  <div class="card"><h2>Esporta per Excel</h2><button class="btn sec" id="xb">Prenotazioni (CSV)</button><button class="btn sec" id="xe">Spese (CSV)</button><p class="note">Esporta le voci della struttura e di tutti gli anni.</p></div>
+<div class="card"><h2>Informazioni</h2><p class="note" id="inf" style="margin:0"></p></div>
 </section>
 </main>
 <button class="fab hide" id="fab" aria-label="Aggiungi"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -138,7 +140,7 @@ progress{width:100%;height:14px;margin-top:10px;accent-color:var(--ac)}
  <label>Ospite (nome cognome)</label><input id="b_g" autocomplete="off" autocapitalize="words">
  <label>Numero ospiti</label><select id="b_u"></select>
  <div class="g2"><div><label>Check-in</label><button type="button" class="dbtn ph" id="b_ib">Seleziona</button></div><div><label>Check-out</label><button type="button" class="dbtn ph" id="b_ob">Seleziona</button></div></div>
- <input type="hidden" id="b_i"><input type="hidden" id="b_o"><p class="note" id="b_nt" style="margin:6px 0 0"></p>
+ <input type="hidden" id="b_i"><input type="hidden" id="b_o"><p class="note" id="b_nt" style="margin:6px 0 0"></p><p class="note" id="b_ov" style="color:var(--out);font-weight:600;margin:6px 0 0"></p>
  <label>Importo lordo (€) — facoltativo</label><input id="b_l" inputmode="decimal">
  <div id="b_fw"><label>Commissione portale (€) — facoltativa</label><input id="b_f" inputmode="decimal"></div>
  <label id="b_nl">Netto (€)</label><input id="b_n" inputmode="decimal">
@@ -170,6 +172,7 @@ var ST=[{id:"m",n:"MenoUno House",r:.21,m:4},{id:"d",n:"Dimora Irene",r:.26,m:6}
 var CATS=["Pulizie","Utenze","Manutenzione","Biancheria e forniture","Canone speciale","Spese estintori","Tasse e imposte","Software","Altro"];
 var PORT=["Airbnb","Booking.com","Diretta"];
 var M=["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
+var VER="2.0",VERD="23 nov 2026",ovOK=false;
 var PC={"Airbnb":"pa","Booking.com":"pb","Diretta":"pd"},IC_NOTE='<svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M9 12h6M9 16h4"/></svg>';
 var S={b:[],e:[]},F="all",last="l",EID=null,EEID=null,CSV=null,IR=[],tm=null,pend=null,pt=null,TAB="sum",LB=0,Y=new Date().getFullYear();
 var $=function(i){return document.getElementById(i)};
@@ -214,6 +217,14 @@ function R(){
  $("kpi").innerHTML='<div class="hero"><small>Utile '+y+'</small><div class="hv">'+eur(pr)+'</div><div class="hl"><span>Prenotazioni <b>'+T.k+'</b></span><span>Notti <b>'+T.n+'</b></span></div></div><div class="k2">'+[["Entrate nette",T.t,"pos"],["Spese",T.e,"neg"],["Cedolare",T.c,""],["Commissioni",T.f,""]].map(function(k){return'<div class="card"><div class="kpi '+k[2]+'">'+eur(k[1])+"<small>"+k[0]+"</small></div></div>"}).join("")+'</div>';
  var mx=Math.max.apply(null,mm.map(function(r){return Math.max(r.t,r.e)}).concat([1]));
  $("bars").innerHTML=mm.map(function(r,i){return"<div"+(y==Y&&i==new Date().getMonth()?" class='cur'":"")+"><span><i style='height:"+(Math.max(r.t,0)/mx*100)+"%;background:var(--ac)'></i><i style='height:"+(r.e/mx*100)+"%;background:var(--out)'></i></span>"+M[i][0]+"</div>"}).join("");
+ var occ={},dIM=function(yy,m){return new Date(yy,m+1,0).getDate()},sl=F=="all"?ST:[stx(F)];
+ S.b.forEach(function(b){var t0=Date.parse(b.i+"T00:00:00Z"),t1=Date.parse(b.o+"T00:00:00Z"),c=0;if(isNaN(t0)||isNaN(t1))return;for(var tt=t0;tt<t1&&c<400;tt+=864e5,c++){var dd=new Date(tt),k=dd.getUTCFullYear()+"-"+dd.getUTCMonth()+"-"+b.s;occ[k]=(occ[k]||0)+1}});
+ var on=function(sid,m){return occ[y+"-"+m+"-"+sid]||0},pc1=function(a,b){return b?(Math.round(a/b*1000)/10).toLocaleString("it-IT")+" %":"—"};
+ var oy=0,ay=0,om=[];
+ for(var m2=0;m2<12;m2++){var o2=0;sl.forEach(function(s){o2+=on(s.id,m2)});om.push(o2);oy+=o2;ay+=dIM(+y,m2)*sl.length}
+ $("occ").innerHTML='<div class="g2"><div><div class="kpi">'+pc1(oy,ay)+'<small>Occupazione '+y+'</small></div></div><div><div class="kpi">'+(T.n?eur(T.g/T.n):"—")+'<small>Prezzo medio a notte (lordo)</small></div></div></div><p class="note">'+oy+' notti occupate su '+ay+' disponibili'+(T.n?' · netto medio '+eur(T.t/T.n)+' a notte':'')+'.</p>'
+  +'<div class="scroll" style="margin-top:10px"><table>'+tbl(["Struttura","Occ.","€/notte"],ST.map(function(s){var o3=0,a3=0,g3=0,n3=0;for(var m3=0;m3<12;m3++){o3+=on(s.id,m3);a3+=dIM(+y,m3)}S.b.forEach(function(b){if(b.s==s.id&&b.i.slice(0,4)==y){g3+=gr(b);n3+=nights(b)}});return[esc(s.n),pc1(o3,a3),n3?eur(g3/n3):"—"]}))+'</table></div>'
+  +'<div class="scroll" style="margin-top:10px"><table>'+tbl(["Mese","Occ.","Notti","€/notte"],mm.map(function(r,i){return[M[i],pc1(om[i],dIM(+y,i)*sl.length),om[i],r.n?eur(r.g/r.n):"—"]}))+'</table></div>';
  $("mt").innerHTML=tbl(["Mese","Netto","Spese","Utile"],mm.map(function(r,i){var u=r.t-r.e;return[M[i],eur(r.t),eur(r.e),'<span class="'+cls(u)+'">'+eur(u)+"</span>"]}),["Totale",eur(T.t),eur(T.e),'<span class="'+cls(pr)+'">'+eur(pr)+"</span>"]);
  $("md").innerHTML=tbl(["Mese","Notti","Lordo","Comm.","Cedolare","Netto"],mm.map(function(r,i){return[M[i],r.n,eur(r.g),eur(r.f),eur(r.c),eur(r.t)]}),["Tot.",T.n,eur(T.g),eur(T.f),eur(T.c),eur(T.t)]);
  $("yt").innerHTML=tbl(["Anno","Netto","Spese","Utile"],ys.map(function(a){var n=0,s=0;fb.forEach(function(b){if(b.i.slice(0,4)==a)n+=b.n});fe.forEach(function(x){if(x.d.slice(0,4)==a)s+=x.a});return[a,eur(n),eur(s),'<span class="'+cls(n-s)+'">'+eur(n-s)+"</span>"]}));
@@ -223,10 +234,10 @@ function R(){
  var qs=nz($("q").value).split(/\s+/).filter(Boolean).map(function(w){return/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(w)?w.replace(/\./g,""):w}),srch=qs.length>0;
  var bs=(srch?fb.filter(function(b){var h=hay(b);return qs.every(function(w){return h.indexOf(w)>-1})}):fb.filter(function(b){return b.i.slice(0,4)==y})).sort(function(a,b){return b.i<a.i?-1:1});
  $("qn").textContent=srch?bs.length+(bs.length==1?" prenotazione trovata":" prenotazioni trovate")+" (tutti gli anni)":"";
- $("bl").innerHTML=bs.length?bs.map(function(b){return"<div class='item"+(b.s=="d"?" d":"")+"' data-b='"+esc(b.id)+"'><div><b>"+esc(b.g||"Ospite n.d.")+"</b><div class='sub'><span class='pt "+(PC[b.p]||"pd")+"'>"+esc(b.p)+"</span><span class='st'>"+esc(stx(b.s).n)+"</span></div><small>"+fd(b.i)+" → "+fd(b.o)+"</small><div class='pills'><span class='pill'>"+nights(b)+(nights(b)==1?" notte":" notti")+"</span>"+(b.u?"<span class='pill'>"+b.u+(b.u==1?" ospite":" ospiti")+"</span>":"")+"</div>"+(b.no?"<small class='nt'>"+IC_NOTE+esc(b.no.replace(/\s+/g," "))+"</small>":"")+"</div><div class='amt'>"+eur(b.n)+"<small>"+(b.l!=null?"lordo "+eur(b.l):"netto")+"</small></div></div>"}).join(""):"<p class='note'>"+(srch?"Nessuna prenotazione trovata.":"Nessuna prenotazione nel "+y+". Tocca + per aggiungerne una.")+"</p>";
+ $("bl").innerHTML=bs.length?bs.map(function(b){return"<div class='item"+(b.s=="d"?" d":"")+"' data-b='"+esc(b.id)+"'><div><b>"+esc(b.g||"Ospite n.d.")+"</b><div class='sub'><span class='pt "+(PC[b.p]||"pd")+"'>"+esc(b.p)+"</span><span class='st'>"+esc(stx(b.s).n)+"</span></div><small>"+fd(b.i)+" → "+fd(b.o)+"</small><div class='pills'><span class='pill'>"+nights(b)+(nights(b)==1?" notte":" notti")+"</span>"+(b.u?"<span class='pill'>"+b.u+(b.u==1?" ospite":" ospiti")+"</span>":"")+(ovl(b).length?"<span class='pill ov'>Sovrapposta</span>":"")+"</div>"+(b.no?"<small class='nt'>"+IC_NOTE+esc(b.no.replace(/\s+/g," "))+"</small>":"")+"</div><div class='amt'>"+eur(b.n)+"<small>"+(b.l!=null?"lordo "+eur(b.l):"netto")+"</small></div></div>"}).join(""):"<p class='note'>"+(srch?"Nessuna prenotazione trovata.":"Nessuna prenotazione nel "+y+". Tocca + per aggiungerne una.")+"</p>";
  var es=fe.filter(function(x){return x.d.slice(0,4)==y}).sort(function(a,b){return b.d<a.d?-1:1});
  $("el").innerHTML=es.length?es.map(function(x){return"<div class='item"+(x.s=="d"?" d":"")+"' data-e='"+esc(x.id)+"'><div><b>"+esc(x.c)+"</b><small>"+esc(stx(x.s).n)+" · "+fd(x.d)+"</small>"+(x.t?"<small class='nt'>"+esc(x.t)+"</small>":"")+"</div><div class='amt neg'>"+eur(x.a)+"</div></div>"}).join(""):"<p class='note'>Nessuna spesa nel "+y+". Tocca + per aggiungerne una.</p>";
- undoUI();$("lbk").textContent=LB?"Ultimo backup: "+new Date(LB).toLocaleDateString("it-IT")+".":"Nessun backup ancora fatto.";
+ $("inf").innerHTML="DG Homestay · versione <b>"+VER+"</b> ("+VERD+")<br>"+S.b.length+" prenotazioni e "+S.e.length+" spese salvate su questo dispositivo.";undoUI();$("lbk").textContent=LB?"Ultimo backup: "+new Date(LB).toLocaleDateString("it-IT")+".":"Nessun backup ancora fatto.";
 }
 
 /* prenotazione */
@@ -244,6 +255,7 @@ function calc(src){
  var l=num($("b_l").value);
  $("b_h").textContent=l!=null?"Cedolare secca "+pc+"%: "+eur(l*r):"Puoi inserire solo il lordo, solo il netto, oppure entrambi.";
 }
+$("b_s").addEventListener("change",showDates);
 ["b_l","b_n","b_f","b_s","b_p","b_man"].forEach(function(k){$(k).addEventListener(k=="b_l"||k=="b_n"||k=="b_f"?"input":"change",function(){calc(k=="b_l"?"l":k=="b_n"?"n":"")})});
 function openB(id){
  var it=id?S.b.filter(function(x){return x.id==id})[0]:null;EID=it?it.id:null;
@@ -262,11 +274,13 @@ $("addB").onclick=function(){
  if(o<i){say("Il check-out non può essere prima del check-in.",1);return}
  if(L==null&&N==null){say("Inserisci almeno un importo: lordo o netto.",1);return}
  if(N==null)N=r2(L*(1-r)-f);
+ var cf0=(o>i)?ovl({id:EID||"",s:s,i:i,o:o}):[];
+ if(cf0.length&&!ovOK){ovOK=true;$("addB").textContent="Salva comunque";say("Le date si sovrappongono a un'altra prenotazione: tocca ancora per salvare comunque.",1);return}
  var upd=!!EID,rec={id:EID||rid(),s:s,p:$("b_p").value,g:$("b_g").value.trim(),u:+$("b_u").value,i:i,o:o,l:L,f:f,c:L!=null?r2(L*r):0,n:N},nt=$("b_no").value.trim();
  if(nt)rec.no=nt;
  if(upd)S.b=S.b.map(function(x){return x.id==rec.id?rec:x});else S.b.push(rec);
  if($("yr").querySelector("option[value='"+i.slice(0,4)+"']")||1)$("yr").value=i.slice(0,4);
- save();$("shB").classList.add("hide");render();say(upd?"Prenotazione modificata.":"Prenotazione aggiunta.");
+ ovOK=false;$("addB").textContent="Salva";save();$("shB").classList.add("hide");render();say(upd?"Prenotazione modificata.":"Prenotazione aggiunta.");
 };
 $("delB").onclick=function(){
  if(pend!="B"){pend="B";this.textContent="Tocca ancora per eliminare";clearTimeout(pt);var b=this;pt=setTimeout(function(){pend=null;b.textContent="Elimina prenotazione"},5000);return}
@@ -388,7 +402,7 @@ async function out(name,mime,data){
  var a=document.createElement("a"),u=URL.createObjectURL(new Blob([data],{type:mime}));a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(u);a.remove()},1500);return true;
 }
 $("bkp").onclick=function(){
- out("backup-affitti-"+new Date().toISOString().slice(0,10)+".json","application/json",JSON.stringify({v:1,b:S.b,e:S.e})).then(function(ok){
+ out("backup-affitti-"+new Date().toISOString().slice(0,10)+".json","application/json",JSON.stringify({v:1,app:VER,b:S.b,e:S.e})).then(function(ok){
   if(ok){LB=Date.now();try{localStorage.setItem("lastbk",String(LB))}catch(e){}render();say("Backup pronto: controlla di averlo salvato in File.")}});
 };
 $("rst").onchange=function(){
@@ -420,11 +434,14 @@ var cal={y:0,m:0,s:null,e:null,ph:0};
 var isoD=function(y,m,d){return y+"-"+("0"+(m+1)).slice(-2)+"-"+("0"+d).slice(-2)};
 var fl=function(d){return(+d.slice(8,10))+" "+M[+d.slice(5,7)-1]+" "+d.slice(0,4)};
 var nn=function(a,b){return Math.round((new Date(b)-new Date(a))/864e5)};
+function ovl(b){return S.b.filter(function(x){return x.id!=b.id&&x.s==b.s&&b.i<x.o&&x.i<b.o})}
 function showDates(){
  var i=$("b_i").value,o=$("b_o").value;
  $("b_ib").textContent=i?fl(i):"Seleziona";$("b_ib").classList.toggle("ph",!i);
  $("b_ob").textContent=o?fl(o):"Seleziona";$("b_ob").classList.toggle("ph",!o);
  $("b_nt").textContent=i&&o&&o>=i?nn(i,o)+(nn(i,o)==1?" notte":" notti"):"";
+ var cf=(i&&o&&o>i)?ovl({id:EID||"",s:$("b_s").value,i:i,o:o}):[];ovOK=false;$("addB").textContent="Salva";
+ $("b_ov").textContent=cf.length?"Attenzione: si sovrappone a "+cf.slice(0,2).map(function(x){return(x.g||"ospite n.d.")+" ("+fd(x.i)+" → "+fd(x.o)+")"}).join(" e ")+(cf.length>2?" e altre":""):"";
 }
 function openCal(ph){
  cal.s=$("b_i").value||null;cal.e=$("b_o").value||null;cal.ph=(ph==1&&cal.s)?1:0;
