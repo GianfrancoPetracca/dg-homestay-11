@@ -54,10 +54,10 @@ input[type=checkbox]{width:22px;min-height:22px;vertical-align:middle;margin-rig
 .pill.ov{background:var(--pab);color:var(--out)}.pills{margin-top:6px}.pill{display:inline-block;font-size:12px;padding:2px 10px;border-radius:20px;background:var(--pill);color:var(--ac);margin-right:6px;font-weight:600}
 .nt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:5px}.nt svg{width:13px;height:13px;vertical-align:-2px;margin-right:5px;stroke:var(--brass);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .amt{text-align:right;font-family:var(--serif);font-size:18px;font-weight:600;white-space:nowrap}
-table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
-th,td{padding:9px 4px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
+table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 5px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
 th{font-size:11px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.06em}tfoot td{font-weight:700;border-top:2px solid var(--brass)}
-.scroll{overflow-x:auto}
+.scroll{overflow-x:auto}#gt th,#gt td,#mt th,#mt td,#yt th,#yt td{padding-left:3px;padding-right:3px}
 .bars{display:flex;align-items:flex-end;gap:5px;height:120px}
 .bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:10px;color:var(--mut)}
 .bars div.cur{color:var(--tx);font-weight:800}
@@ -95,10 +95,10 @@ progress{width:100%;height:14px;margin-top:10px;accent-color:var(--ac)}
  <div id="kpi"></div>
  <div class="card"><h2>Andamento mensile</h2><div class="bars" id="bars"></div><p class="note"><span class="pos">■</span> netto &nbsp;<span class="neg">■</span> spese</p></div>
  <div class="card"><h2>Occupazione e prezzi</h2><div id="occ"></div></div>
- <div class="card"><h2>Per mese</h2><table id="mt"></table><button class="btn sec" id="tgl">Mostra dettaglio completo</button><div class="scroll hide" id="mdw" style="margin-top:10px"><table id="md"></table></div>
+ <div class="card"><h2>Per mese</h2><div class="scroll"><table id="mt"></table></div><button class="btn sec" id="tgl">Mostra dettaglio completo</button><div class="scroll hide" id="mdw" style="margin-top:10px"><table id="md"></table></div>
   <p class="note">Le prenotazioni contano nel mese del check-in. Netto = lordo − commissione − cedolare.</p></div>
- <div class="card"><h2>Storico per anno</h2><table id="yt"></table></div>
- <div class="card"><h2>Per struttura</h2><table id="gt"></table></div>
+ <div class="card"><h2>Storico per anno</h2><div class="scroll"><table id="yt"></table></div></div>
+ <div class="card"><h2>Per struttura</h2><div class="scroll"><table id="gt"></table></div></div>
  <div class="card"><h2>Per portale</h2><div class="scroll"><table id="pt"></table></div></div>
 </section>
 <section id="bk" class="hide"><div class="sw"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="q" type="search" placeholder="Cerca per nome, data, cifra o nota" autocomplete="off"></div><p class="note" id="qn" style="margin:0 0 8px"></p><div id="bl"></div></section>
@@ -172,12 +172,14 @@ var ST=[{id:"m",n:"MenoUno House",r:.21,m:4},{id:"d",n:"Dimora Irene",r:.26,m:6}
 var CATS=["Pulizie","Utenze","Manutenzione","Biancheria e forniture","Canone speciale","Spese estintori","Tasse e imposte","Software","Altro"];
 var PORT=["Airbnb","Booking.com","Diretta"];
 var M=["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
-var VER="2.0",VERD="23 nov 2026",ovOK=false;
+var VER="2.1",VERD="23 nov 2026",ovOK=false;
 var PC={"Airbnb":"pa","Booking.com":"pb","Diretta":"pd"},IC_NOTE='<svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M9 12h6M9 16h4"/></svg>';
 var S={b:[],e:[]},F="all",last="l",EID=null,EEID=null,CSV=null,IR=[],tm=null,pend=null,pt=null,TAB="sum",LB=0,Y=new Date().getFullYear();
 var $=function(i){return document.getElementById(i)};
 var NF=(function(){try{return new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",useGrouping:"always"})}catch(e){return new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"})}})();
 var eur=function(n){return NF.format(n||0)};
+var NN=(function(){try{return new Intl.NumberFormat("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:"always"})}catch(e){return new Intl.NumberFormat("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2})}})();
+var nm=function(n){return NN.format(n||0)};
 var cls=function(n){return n<0?"neg":"pos"};
 var r2=function(n){return Math.round(n*100)/100};
 var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
@@ -196,7 +198,7 @@ function opts(el,arr){$(el).innerHTML=arr.map(function(a){return"<option value='
 function norm(d){return{b:Array.isArray(d&&d.b)?d.b:[],e:Array.isArray(d&&d.e)?d.e:[]}}
 function ensureIds(){var ch=false;S.b.concat(S.e).forEach(function(x){if(!x.id){x.id=rid();ch=true}});return ch}
 function save(){try{localStorage.setItem("ledger2",JSON.stringify(S))}catch(e){say("Impossibile salvare su questo dispositivo.",1)}}
-function years(){var s={};for(var a=2020;a<=Y+1;a++)s[a]=1;S.b.forEach(function(b){s[b.i.slice(0,4)]=1});S.e.forEach(function(x){s[x.d.slice(0,4)]=1});return Object.keys(s).sort()}
+function years(){var s={},nw=new Date(),last=nw.getFullYear()+(nw.getMonth()>=7?1:0);for(var a=2024;a<=last;a++)s[a]=1;s[nw.getFullYear()]=1;S.b.forEach(function(b){s[b.i.slice(0,4)]=1});S.e.forEach(function(x){s[x.d.slice(0,4)]=1});return Object.keys(s).sort()}
 function tbl(h,rows,foot){return"<thead><tr>"+h.map(function(x){return"<th>"+x+"</th>"}).join("")+"</tr></thead><tbody>"+rows.map(function(r){return"<tr>"+r.map(function(c){return"<td>"+c+"</td>"}).join("")+"</tr>"}).join("")+"</tbody>"+(foot?"<tfoot><tr>"+foot.map(function(c){return"<td>"+c+"</td>"}).join("")+"</tr></tfoot>":"")}
 var MF=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
 function nz(s){return String(s==null?"":s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
@@ -223,14 +225,14 @@ function R(){
  var oy=0,ay=0,om=[];
  for(var m2=0;m2<12;m2++){var o2=0;sl.forEach(function(s){o2+=on(s.id,m2)});om.push(o2);oy+=o2;ay+=dIM(+y,m2)*sl.length}
  $("occ").innerHTML='<div class="g2"><div><div class="kpi">'+pc1(oy,ay)+'<small>Occupazione '+y+'</small></div></div><div><div class="kpi">'+(T.n?eur(T.g/T.n):"—")+'<small>Prezzo medio a notte (lordo)</small></div></div></div><p class="note">'+oy+' notti occupate su '+ay+' disponibili'+(T.n?' · netto medio '+eur(T.t/T.n)+' a notte':'')+'.</p>'
-  +'<div class="scroll" style="margin-top:10px"><table>'+tbl(["Struttura","Occ.","€/notte"],ST.map(function(s){var o3=0,a3=0,g3=0,n3=0;for(var m3=0;m3<12;m3++){o3+=on(s.id,m3);a3+=dIM(+y,m3)}S.b.forEach(function(b){if(b.s==s.id&&b.i.slice(0,4)==y){g3+=gr(b);n3+=nights(b)}});return[esc(s.n),pc1(o3,a3),n3?eur(g3/n3):"—"]}))+'</table></div>'
-  +'<div class="scroll" style="margin-top:10px"><table>'+tbl(["Mese","Occ.","Notti","€/notte"],mm.map(function(r,i){return[M[i],pc1(om[i],dIM(+y,i)*sl.length),om[i],r.n?eur(r.g/r.n):"—"]}))+'</table></div>';
- $("mt").innerHTML=tbl(["Mese","Netto","Spese","Utile"],mm.map(function(r,i){var u=r.t-r.e;return[M[i],eur(r.t),eur(r.e),'<span class="'+cls(u)+'">'+eur(u)+"</span>"]}),["Totale",eur(T.t),eur(T.e),'<span class="'+cls(pr)+'">'+eur(pr)+"</span>"]);
- $("md").innerHTML=tbl(["Mese","Notti","Lordo","Comm.","Cedolare","Netto"],mm.map(function(r,i){return[M[i],r.n,eur(r.g),eur(r.f),eur(r.c),eur(r.t)]}),["Tot.",T.n,eur(T.g),eur(T.f),eur(T.c),eur(T.t)]);
- $("yt").innerHTML=tbl(["Anno","Netto","Spese","Utile"],ys.map(function(a){var n=0,s=0;fb.forEach(function(b){if(b.i.slice(0,4)==a)n+=b.n});fe.forEach(function(x){if(x.d.slice(0,4)==a)s+=x.a});return[a,eur(n),eur(s),'<span class="'+cls(n-s)+'">'+eur(n-s)+"</span>"]}));
- $("gt").innerHTML=tbl(["Struttura","Netto","Spese","Utile"],ST.map(function(s){var n=0,e=0;S.b.forEach(function(b){if(b.s==s.id&&b.i.slice(0,4)==y)n+=b.n});S.e.forEach(function(x){if(x.s==s.id&&x.d.slice(0,4)==y)e+=x.a});return[esc(s.n)+" <small style='color:var(--mut)'>"+Math.round(s.r*100)+"%</small>",eur(n),eur(e),'<span class="'+cls(n-e)+'">'+eur(n-e)+"</span>"]}));
+  +'<div class="scroll" style="margin-top:10px"><table>'+tbl(["Struttura","Occ.","€/notte"],ST.map(function(s){var o3=0,a3=0,g3=0,n3=0;for(var m3=0;m3<12;m3++){o3+=on(s.id,m3);a3+=dIM(+y,m3)}S.b.forEach(function(b){if(b.s==s.id&&b.i.slice(0,4)==y){g3+=gr(b);n3+=nights(b)}});return[esc(s.n),pc1(o3,a3),n3?nm(g3/n3):"—"]}))+'</table></div>'
+  +'<div class="scroll" style="margin-top:10px"><table>'+tbl(["Mese","Occ.","Notti","€/notte"],mm.map(function(r,i){return[M[i],pc1(om[i],dIM(+y,i)*sl.length),om[i],r.n?nm(r.g/r.n):"—"]}))+'</table></div>';
+ $("mt").innerHTML=tbl(["Mese","Netto €","Spese €","Utile €"],mm.map(function(r,i){var u=r.t-r.e;return[M[i],nm(r.t),nm(r.e),'<span class="'+cls(u)+'">'+nm(u)+"</span>"]}),["Totale",nm(T.t),nm(T.e),'<span class="'+cls(pr)+'">'+nm(pr)+"</span>"]);
+ $("md").innerHTML=tbl(["Mese","Notti","Lordo €","Comm. €","Cedolare €","Netto €"],mm.map(function(r,i){return[M[i],r.n,nm(r.g),nm(r.f),nm(r.c),nm(r.t)]}),["Tot.",T.n,nm(T.g),nm(T.f),nm(T.c),nm(T.t)]);
+ $("yt").innerHTML=tbl(["Anno","Netto €","Spese €","Utile €"],ys.map(function(a){var n=0,s=0;fb.forEach(function(b){if(b.i.slice(0,4)==a)n+=b.n});fe.forEach(function(x){if(x.d.slice(0,4)==a)s+=x.a});return[a,nm(n),nm(s),'<span class="'+cls(n-s)+'">'+nm(n-s)+"</span>"]}));
+ $("gt").innerHTML=tbl(["Struttura","Netto €","Spese €","Utile €"],ST.map(function(s){var n=0,e=0;S.b.forEach(function(b){if(b.s==s.id&&b.i.slice(0,4)==y)n+=b.n});S.e.forEach(function(x){if(x.s==s.id&&x.d.slice(0,4)==y)e+=x.a});return[esc(s.n)+"<br><small style='color:var(--mut)'>cedolare "+Math.round(s.r*100)+"%</small>",nm(n),nm(e),'<span class="'+cls(n-e)+'">'+nm(n-e)+"</span>"]}));
  var Q={};fb.forEach(function(b){if(b.i.slice(0,4)==y){Q[b.p]=Q[b.p]||{k:0,t:0,n:0,u:0};Q[b.p].k++;Q[b.p].t+=b.n;Q[b.p].n+=nights(b);Q[b.p].u+=b.u||0}});
- $("pt").innerHTML=tbl(["Portale","Pren.","Notti","Ospiti","Netto"],PORT.filter(function(p){return Q[p]}).map(function(p){return[p,Q[p].k,Q[p].n,Q[p].u,eur(Q[p].t)]}));
+ $("pt").innerHTML=tbl(["Portale","Pren.","Notti","Ospiti","Netto €"],PORT.filter(function(p){return Q[p]}).map(function(p){return[p,Q[p].k,Q[p].n,Q[p].u,nm(Q[p].t)]}));
  var qs=nz($("q").value).split(/\s+/).filter(Boolean).map(function(w){return/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(w)?w.replace(/\./g,""):w}),srch=qs.length>0;
  var bs=(srch?fb.filter(function(b){var h=hay(b);return qs.every(function(w){return h.indexOf(w)>-1})}):fb.filter(function(b){return b.i.slice(0,4)==y})).sort(function(a,b){return b.i<a.i?-1:1});
  $("qn").textContent=srch?bs.length+(bs.length==1?" prenotazione trovata":" prenotazioni trovate")+" (tutti gli anni)":"";
@@ -430,7 +432,7 @@ $("b_g").addEventListener("input",function(){
 });
 /* calendario a intervallo: due tocchi = check-in e check-out */
 var MFC=["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
-var cal={y:0,m:0,s:null,e:null,ph:0};
+var cal={y:0,m:0,s:null,e:null,ph:0,min:2024};
 var isoD=function(y,m,d){return y+"-"+("0"+(m+1)).slice(-2)+"-"+("0"+d).slice(-2)};
 var fl=function(d){return(+d.slice(8,10))+" "+M[+d.slice(5,7)-1]+" "+d.slice(0,4)};
 var nn=function(a,b){return Math.round((new Date(b)-new Date(a))/864e5)};
@@ -446,11 +448,11 @@ function showDates(){
 function openCal(ph){
  cal.s=$("b_i").value||null;cal.e=$("b_o").value||null;cal.ph=(ph==1&&cal.s)?1:0;
  var n=new Date(),base=cal.s||cal.e||isoD(n.getFullYear(),n.getMonth(),n.getDate());
- cal.y=+base.slice(0,4);cal.m=+base.slice(5,7)-1;
+ cal.y=+base.slice(0,4);cal.m=+base.slice(5,7)-1;cal.min=Math.min(2024,cal.y);
  $("cal").classList.remove("hide");drawCal();
 }
 function drawCal(){
- var ys="";for(var y=2020;y<=Math.max(Y+2,cal.y);y++)ys+="<option>"+y+"</option>";
+ var ys="";for(var y=cal.min;y<=Math.max(Y+2,cal.y);y++)ys+="<option>"+y+"</option>";
  $("cy").innerHTML=ys;$("cy").value=cal.y;
  $("cm").innerHTML=MFC.map(function(m,i){return"<option value='"+i+"'>"+m+"</option>"}).join("");$("cm").value=cal.m;
  var off=(new Date(cal.y,cal.m,1).getDay()+6)%7,dim=new Date(cal.y,cal.m+1,0).getDate(),n=new Date(),td=isoD(n.getFullYear(),n.getMonth(),n.getDate()),h="";
@@ -468,7 +470,7 @@ $("cg").addEventListener("click",function(ev){
  if(k<cal.s){cal.s=k;cal.e=null;drawCal();return}
  cal.e=k;cal.ph=0;drawCal();setTimeout(applyCal,280);
 });
-$("cprev").onclick=function(){cal.m--;if(cal.m<0){cal.m=11;cal.y--}if(cal.y<2020){cal.y=2020;cal.m=0}drawCal()};
+$("cprev").onclick=function(){cal.m--;if(cal.m<0){cal.m=11;cal.y--}if(cal.y<cal.min){cal.y=cal.min;cal.m=0}drawCal()};
 $("cnext").onclick=function(){cal.m++;if(cal.m>11){cal.m=0;cal.y++}drawCal()};
 $("cm").onchange=function(){cal.m=+this.value;drawCal()};$("cy").onchange=function(){cal.y=+this.value;drawCal()};
 $("cclr").onclick=function(){cal.s=null;cal.e=null;cal.ph=0;applyCal()};
